@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "coletar": "node --env-file=.env --import tsx src/coletar.ts",
+    "tratar": "node --env-file=.env --import tsx src/tratar.ts",
+    "test": "node --import tsx --test 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
