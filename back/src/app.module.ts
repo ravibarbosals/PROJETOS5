@@ -15,6 +15,7 @@ import { AcessoModule } from '@/modules/acesso/acesso.module';
 import { AlertasModule } from '@/modules/alertas/alertas.module';
 import { BoletinsModule } from '@/modules/boletins/boletins.module';
 import { HealthModule } from '@/modules/health/health.module';
+import { PaineisModule } from '@/modules/paineis/paineis.module';
 import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastreio-operacional.module';
 
 @Module({
@@ -31,6 +32,7 @@ import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastre
     AlertasModule,
     RastreioOperacionalModule,
     BoletinsModule,
+    PaineisModule,
   ],
   controllers: [AppController],
   providers: [
