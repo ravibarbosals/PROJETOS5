@@ -18,11 +18,14 @@ export class AlertaResponseDto {
   fonte!: string;
   lida_em!: Date;
   disparado_em!: Date;
-  /** Última atualização da fonte (RN-007); nula enquanto o contrato do gold não existe (DEC-009) */
+  /** Última coleta bem-sucedida da fonte (RN-007); nula se a fonte nunca foi coletada */
   fonte_atualizada_em!: Date | null;
   status!: StatusAlerta;
 
-  static from(alerta: Alerta): AlertaResponseDto {
+  static from(
+    alerta: Alerta,
+    fonteAtualizadaEm: Date | null,
+  ): AlertaResponseDto {
     return {
       id: alerta.id,
       nivel: alerta.nivel,
@@ -37,7 +40,7 @@ export class AlertaResponseDto {
       lida_em: alerta.lidaEm,
       disparado_em: alerta.dthrDisparo,
       // RN-007 #2: never the current time when the source date is unknown.
-      fonte_atualizada_em: null,
+      fonte_atualizada_em: fonteAtualizadaEm,
       status: alerta.status,
     };
   }

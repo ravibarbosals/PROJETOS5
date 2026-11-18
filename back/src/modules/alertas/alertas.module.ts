@@ -7,6 +7,7 @@ import { ParametroAlertaHistorico } from '@/modules/alertas/entities/parametro-a
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
 import { AlertaService } from '@/modules/alertas/services/alerta.service';
 import { ParametroAlertaService } from '@/modules/alertas/services/parametro-alerta.service';
+import { PaineisModule } from '@/modules/paineis/paineis.module';
 
 // MOD-002.
 @Module({
@@ -16,6 +17,7 @@ import { ParametroAlertaService } from '@/modules/alertas/services/parametro-ale
       ParametroAlerta,
       ParametroAlertaHistorico,
     ]),
+    PaineisModule,
   ],
   controllers: [AlertaController, ParametroAlertaController],
   providers: [AlertaService, ParametroAlertaService],

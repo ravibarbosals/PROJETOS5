@@ -12,4 +12,10 @@ export class FonteStatusService {
       'SELECT fonte, ultima_atualizacao FROM gold.fonte_status ORDER BY fonte',
     );
   }
+
+  // RN-007: sources without a successful collection are absent, never "now".
+  async ultimaAtualizacaoPorFonte(): Promise<Map<string, Date>> {
+    const status = await this.listar();
+    return new Map(status.map((s) => [s.fonte, s.ultima_atualizacao]));
+  }
 }

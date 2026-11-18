@@ -8,5 +8,6 @@ import { LeituraService } from '@/modules/paineis/services/leitura.service';
 @Module({
   controllers: [LeituraController, FonteController],
   providers: [LeituraService, FonteStatusService],
+  exports: [FonteStatusService],
 })
 export class PaineisModule {}

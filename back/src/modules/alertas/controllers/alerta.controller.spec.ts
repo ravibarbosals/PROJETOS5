@@ -15,6 +15,7 @@ import { AlertaController } from '@/modules/alertas/controllers/alerta.controlle
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 import { AlertaService } from '@/modules/alertas/services/alerta.service';
+import { FonteStatusService } from '@/modules/paineis/services/fonte-status.service';
 
 const PAPEIS: Papel[] = [
   Papel.Tecnico,
@@ -57,6 +58,7 @@ describe('AlertaController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};
   const service = { listar: jest.fn() };
+  const fontes = { ultimaAtualizacaoPorFonte: jest.fn() };
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -64,6 +66,7 @@ describe('AlertaController', () => {
       controllers: [AlertaController],
       providers: [
         { provide: AlertaService, useValue: service },
+        { provide: FonteStatusService, useValue: fontes },
         {
           provide: UsuarioService,
           useValue: {
@@ -94,6 +97,8 @@ describe('AlertaController', () => {
       meta: { itemsPerPage: 20, totalItems: 1, currentPage: 1, totalPages: 1 },
       links: { current: '/alertas?page=1' },
     });
+    fontes.ultimaAtualizacaoPorFonte.mockReset();
+    fontes.ultimaAtualizacaoPorFonte.mockResolvedValue(new Map());
   });
 
   const get = (id: number) =>
@@ -119,7 +124,11 @@ describe('AlertaController', () => {
     expect(service.listar).not.toHaveBeenCalled();
   });
 
-  it('answers the MOD-002 contract without the update time of the source (RN-007 #2)', async () => {
+  it('answers the MOD-002 contract with the update time of the source (RN-007 #1)', async () => {
+    fontes.ultimaAtualizacaoPorFonte.mockResolvedValue(
+      new Map([['APAC', new Date('2026-10-24T10:30:00Z')]]),
+    );
+
     const response = await get(2).expect(200);
 
     expect((response.body as { data: unknown[] }).data).toEqual([
@@ -132,9 +141,18 @@ describe('AlertaController', () => {
         fonte: 'APAC',
         lida_em: '2026-10-24T10:00:00.000Z',
         disparado_em: '2026-10-24T10:05:00.000Z',
-        fonte_atualizada_em: null,
+        fonte_atualizada_em: '2026-10-24T10:30:00.000Z',
         status: 'ATIVO',
       },
     ]);
+  });
+
+  it('answers null when the source was never collected (RN-007 #2)', async () => {
+    const response = await get(2).expect(200);
+
+    const [alerta] = (
+      response.body as { data: { fonte_atualizada_em: unknown }[] }
+    ).data;
+    expect(alerta.fonte_atualizada_em).toBeNull();
   });
 });

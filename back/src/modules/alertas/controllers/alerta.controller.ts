@@ -9,12 +9,16 @@ import {
   ALERTA_PAGINATE_CONFIG,
   AlertaService,
 } from '@/modules/alertas/services/alerta.service';
+import { FonteStatusService } from '@/modules/paineis/services/fonte-status.service';
 
 @ApiTags('alertas')
 @ApiBearerAuth()
 @Controller('alertas')
 export class AlertaController {
-  constructor(private readonly alertas: AlertaService) {}
+  constructor(
+    private readonly alertas: AlertaService,
+    private readonly fontes: FonteStatusService,
+  ) {}
 
   // PER-006. COM pending DUV-036, implemented as denied.
   @Get()
@@ -23,10 +27,15 @@ export class AlertaController {
   async listar(
     @Paginate() query: PaginateQuery,
   ): Promise<Paginated<AlertaResponseDto>> {
-    const pagina = await this.alertas.listar(query);
+    const [pagina, atualizacoes] = await Promise.all([
+      this.alertas.listar(query),
+      this.fontes.ultimaAtualizacaoPorFonte(),
+    ]);
     return {
       ...pagina,
-      data: pagina.data.map((alerta) => AlertaResponseDto.from(alerta)),
+      data: pagina.data.map((alerta) =>
+        AlertaResponseDto.from(alerta, atualizacoes.get(alerta.fonte) ?? null),
+      ),
     } as Paginated<AlertaResponseDto>;
   }
 }
