@@ -5,6 +5,7 @@
   "scripts": {
     "coletar": "node --env-file=.env --import tsx src/coletar.ts",
     "tratar": "node --env-file=.env --import tsx src/tratar.ts",
+    "agendar": "node --env-file=.env --import tsx src/agendar.ts",
     "test": "node --import tsx --test 'src/**/*.test.ts'",
     "typecheck": "tsc --noEmit"
   },
