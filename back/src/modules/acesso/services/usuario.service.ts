@@ -13,7 +13,7 @@ import {
 } from 'nestjs-paginate';
 import { DataSource, Repository } from 'typeorm';
 import { BusinessRuleException } from '@/core/exceptions/business-rule.exception';
-import { isUniqueViolation } from '@/infrastructure/database/sql-server-errors';
+import { isUniqueViolation } from '@/infrastructure/database/postgres-errors';
 import { AcessoRules } from '@/modules/acesso/acesso.business-rules';
 import { UsuarioPapel } from '@/modules/acesso/entities/usuario-papel.entity';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';

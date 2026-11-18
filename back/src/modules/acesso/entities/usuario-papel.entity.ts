@@ -20,7 +20,7 @@ export class UsuarioPapel {
   @Column({ name: 'papel', type: 'varchar', length: 3 })
   papel!: Papel;
 
-  @CreateDateColumn({ name: 'dthr_criacao', type: 'datetime2', precision: 3 })
+  @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
   @ManyToOne(() => Usuario, (usuario) => usuario.papeis)

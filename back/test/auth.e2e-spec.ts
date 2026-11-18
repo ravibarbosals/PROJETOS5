@@ -79,7 +79,7 @@ describe('Auth (e2e)', () => {
     ]);
     const linhas: unknown = await app
       .get(DataSource)
-      .query('SELECT * FROM [app].[registro_acesso]');
+      .query('SELECT * FROM app.registro_acesso');
     expect(JSON.stringify(linhas)).not.toContain(SENHA);
   });
 

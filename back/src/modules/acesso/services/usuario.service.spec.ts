@@ -110,7 +110,7 @@ describe('UsuarioService.criar (RN-010)', () => {
 
   it('turns a unique index violation (concurrent insert) into the same 409', async () => {
     const { service, repo } = setup();
-    repo.save.mockRejectedValue({ driverError: { number: 2627 } });
+    repo.save.mockRejectedValue({ driverError: { code: '23505' } });
 
     const error = await service.criar(novo).catch((e: unknown) => e);
 

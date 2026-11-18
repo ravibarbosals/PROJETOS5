@@ -61,7 +61,7 @@ export class TempoAcionamentoService {
   ) {}
 
   // Alerts triggered in the period (inclusive) with their first linked action.
-  // One grouped query: no IN list, which SQL Server caps at 2100 parameters.
+  // One grouped query instead of one query per alert.
   async calcular(
     periodo: PeriodoQueryDto,
   ): Promise<TempoAcionamentoResponseDto> {

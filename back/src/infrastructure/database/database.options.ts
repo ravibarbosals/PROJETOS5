@@ -1,44 +1,25 @@
 import { join } from 'node:path';
-import type { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
+import type { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import type { EnvironmentVariables } from '@/core/config/env.validation';
 
 // Everything the app writes lives in the `app` schema (DEC-016): entities and
 // the migrations table default to it. The schema itself is created outside the
-// migrations (compose db-init locally; DBA on Azure).
+// migrations (compose db-init locally; once by hand on Neon).
 export const APP_SCHEMA = 'app';
 
 export const MIGRATIONS_GLOB = join(__dirname, 'migrations', '*.{ts,js}');
 
-type DatabaseEnv = Pick<
-  EnvironmentVariables,
-  | 'DB_HOST'
-  | 'DB_PORT'
-  | 'DB_USER'
-  | 'DB_PASSWORD'
-  | 'DB_NAME'
-  | 'DB_ENCRYPT'
-  | 'DB_TRUST_SERVER_CERTIFICATE'
->;
+type DatabaseEnv = Pick<EnvironmentVariables, 'DATABASE_URL'>;
 
 export function buildDatabaseOptions(
   env: DatabaseEnv,
-): SqlServerConnectionOptions {
+): PostgresConnectionOptions {
   return {
-    type: 'mssql',
-    host: env.DB_HOST,
-    port: env.DB_PORT,
-    username: env.DB_USER,
-    password: env.DB_PASSWORD,
-    database: env.DB_NAME,
+    type: 'postgres',
+    // SSL comes from the URL (sslmode=verify-full on Neon).
+    url: env.DATABASE_URL,
     schema: APP_SCHEMA,
-    options: {
-      encrypt: env.DB_ENCRYPT,
-      trustServerCertificate: env.DB_TRUST_SERVER_CERTIFICATE,
-      // Columns are datetime2 in UTC (DEC-017). TypeORM defaults this to false,
-      // which would read and write dates in the process time zone.
-      useUTC: true,
-    },
-    // Schemas bronze/silver/gold belong to the data pipeline (DEC-006, DEC-008).
+    // Schemas bronze and gold belong to the data pipeline (DEC-024).
     synchronize: false,
     migrationsRun: false,
     migrations: [MIGRATIONS_GLOB],

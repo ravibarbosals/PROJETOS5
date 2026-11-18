@@ -14,16 +14,16 @@ export class RegistroAcesso {
   @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;
 
-  @Column({ name: 'email_informado', type: 'nvarchar', length: 254 })
+  @Column({ name: 'email_informado', type: 'varchar', length: 254 })
   emailInformado!: string;
 
   @Column({ name: 'id_usuario', type: 'int', nullable: true })
   idUsuario!: number | null;
 
-  @Column({ name: 'sucesso', type: 'bit' })
+  @Column({ name: 'sucesso', type: 'boolean' })
   sucesso!: boolean;
 
-  @CreateDateColumn({ name: 'dthr_criacao', type: 'datetime2', precision: 3 })
+  @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
   @ManyToOne(() => Usuario, { nullable: true })

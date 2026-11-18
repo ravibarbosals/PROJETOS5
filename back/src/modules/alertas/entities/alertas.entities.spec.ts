@@ -95,7 +95,7 @@ describe('CriaTabelasAlertasAcoes migration', () => {
     const sql = (await migrationStatements('up')).join('\n');
 
     expect(sql).toContain(
-      'CONSTRAINT [uq_alerta_parametro_leitura] UNIQUE ([id_parametro_alerta], [fonte], [estacao], [lida_em])',
+      'CONSTRAINT uq_alerta_parametro_leitura UNIQUE (id_parametro_alerta, fonte, estacao, lida_em)',
     );
   });
 
@@ -103,17 +103,17 @@ describe('CriaTabelasAlertasAcoes migration', () => {
     const statements = await migrationStatements('up');
 
     expect(statements.at(-1)).toBe(
-      'INSERT INTO [app].[controle_avaliacao_alerta] ([ultima_lida_em]) VALUES (NULL)',
+      'INSERT INTO app.controle_avaliacao_alerta (ultima_lida_em) VALUES (NULL)',
     );
   });
 
   it('drops the tables in reverse dependency order', async () => {
     expect(await migrationStatements('down')).toEqual([
-      'DROP TABLE [app].[controle_avaliacao_alerta]',
-      'DROP TABLE [app].[acao]',
-      'DROP TABLE [app].[alerta]',
-      'DROP TABLE [app].[parametro_alerta_historico]',
-      'DROP TABLE [app].[parametro_alerta]',
+      'DROP TABLE app.controle_avaliacao_alerta',
+      'DROP TABLE app.acao',
+      'DROP TABLE app.alerta',
+      'DROP TABLE app.parametro_alerta_historico',
+      'DROP TABLE app.parametro_alerta',
     ]);
   });
 });

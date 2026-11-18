@@ -54,7 +54,7 @@ export async function registrarAcaoEm(app: AppE2e, dados: DadosAcao) {
   await app
     .get(DataSource)
     .query(
-      'INSERT INTO [app].[acao] ([descricao], [id_alerta], [id_usuario], [dthr_criacao]) VALUES (@0, @1, @2, @3)',
+      'INSERT INTO app.acao (descricao, id_alerta, id_usuario, dthr_criacao) VALUES ($1, $2, $3, $4)',
       [
         dados.descricao,
         dados.idAlerta ?? null,

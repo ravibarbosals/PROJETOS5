@@ -2,10 +2,7 @@ import 'reflect-metadata';
 import { NodeEnv, validateEnv } from '@/core/config/env.validation';
 
 const requiredEnv = {
-  DB_HOST: 'localhost',
-  DB_USER: 'sa',
-  DB_PASSWORD: 'secret',
-  DB_NAME: 'vigia',
+  DATABASE_URL: 'postgresql://postgres:secret@localhost:5432/vigia',
   JWT_SECRET: 'x'.repeat(32),
 };
 
@@ -15,22 +12,12 @@ describe('validateEnv', () => {
 
     expect(env.NODE_ENV).toBe(NodeEnv.Development);
     expect(env.PORT).toBe(3000);
-    expect(env.DB_PORT).toBe(1433);
-    expect(env.DB_ENCRYPT).toBe(true);
-    expect(env.DB_TRUST_SERVER_CERTIFICATE).toBe(false);
   });
 
-  it('converts numbers and booleans from strings', () => {
-    const env = validateEnv({
-      ...requiredEnv,
-      PORT: '8080',
-      DB_ENCRYPT: 'false',
-      DB_TRUST_SERVER_CERTIFICATE: 'true',
-    });
+  it('converts numbers from strings', () => {
+    const env = validateEnv({ ...requiredEnv, PORT: '8080' });
 
     expect(env.PORT).toBe(8080);
-    expect(env.DB_ENCRYPT).toBe(false);
-    expect(env.DB_TRUST_SERVER_CERTIFICATE).toBe(true);
   });
 
   it('rejects an invalid PORT', () => {
@@ -56,7 +43,10 @@ describe('validateEnv', () => {
     ).toThrow(/JWT_EXPIRES_IN/);
   });
 
-  it('requires the database connection variables', () => {
-    expect(() => validateEnv({})).toThrow(/DB_HOST/);
+  it('requires a PostgreSQL connection URL', () => {
+    expect(() => validateEnv({})).toThrow(/DATABASE_URL/);
+    expect(() =>
+      validateEnv({ ...requiredEnv, DATABASE_URL: 'mssql://localhost' }),
+    ).toThrow(/DATABASE_URL/);
   });
 });

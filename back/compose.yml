@@ -2,34 +2,37 @@
 #   docker compose up -d --build --wait   ->  http://localhost:8080
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:17-alpine
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?defina MSSQL_SA_PASSWORD no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_DB: ${POSTGRES_DB:-vigia}
     ports:
-      - "1433:1433"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - mssql-data:/var/opt/mssql
+      - pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d $${POSTGRES_DB}"]
+      interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 20s
 
+  # The app schema lives outside the migrations (DEC-016): same step as on Neon.
   db-init:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:17-alpine
     environment:
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD}
-      DB_NAME: ${DB_NAME:-vigia}
-    entrypoint:
-      - /bin/bash
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - psql
+      - -h
+      - db
+      - -U
+      - postgres
+      - -d
+      - ${POSTGRES_DB:-vigia}
+      - -v
+      - ON_ERROR_STOP=1
       - -c
-      - >-
-        /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P "$$MSSQL_SA_PASSWORD" -C -b
-        -Q "IF DB_ID('$$DB_NAME') IS NULL CREATE DATABASE [$$DB_NAME]" &&
-        /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P "$$MSSQL_SA_PASSWORD" -C -b -d "$$DB_NAME"
-        -Q "IF SCHEMA_ID('app') IS NULL EXEC('CREATE SCHEMA app')"
+      - CREATE SCHEMA IF NOT EXISTS app
     depends_on:
       db:
         condition: service_healthy
@@ -42,7 +45,7 @@ services:
     image: vigia-back
     env_file: .env
     environment:
-      DB_HOST: db
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vigia}
     command:
       - sh
       - -c
@@ -60,7 +63,7 @@ services:
     env_file: .env
     environment:
       NODE_ENV: production
-      DB_HOST: db
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vigia}
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     healthcheck:
@@ -88,4 +91,4 @@ services:
         condition: service_healthy
 
 volumes:
-  mssql-data:
+  pg-data:

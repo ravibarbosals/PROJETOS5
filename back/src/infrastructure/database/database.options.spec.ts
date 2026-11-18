@@ -5,27 +5,16 @@ import {
 } from '@/infrastructure/database/database.options';
 
 const env = {
-  DB_HOST: 'localhost',
-  DB_PORT: 1433,
-  DB_USER: 'sa',
-  DB_PASSWORD: 'secret',
-  DB_NAME: 'vigia',
-  DB_ENCRYPT: true,
-  DB_TRUST_SERVER_CERTIFICATE: false,
+  DATABASE_URL: 'postgresql://postgres:secret@localhost:5432/vigia',
 };
 
 describe('buildDatabaseOptions', () => {
-  it('maps the environment to the SQL Server connection', () => {
+  it('maps the environment to the PostgreSQL connection', () => {
     const options = buildDatabaseOptions(env);
 
     expect(options).toMatchObject({
-      type: 'mssql',
-      host: 'localhost',
-      port: 1433,
-      username: 'sa',
-      password: 'secret',
-      database: 'vigia',
-      options: { encrypt: true, trustServerCertificate: false, useUTC: true },
+      type: 'postgres',
+      url: 'postgresql://postgres:secret@localhost:5432/vigia',
     });
   });
 

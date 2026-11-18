@@ -6,7 +6,6 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { jsonTransformer } from '@/infrastructure/database/transformers/json.transformer';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
@@ -27,24 +26,13 @@ export class ParametroAlertaHistorico {
   operacao!: OperacaoHistorico;
 
   // Null on creation.
-  @Column({
-    name: 'valor_anterior',
-    type: 'nvarchar',
-    length: 'MAX',
-    nullable: true,
-    transformer: jsonTransformer,
-  })
+  @Column({ name: 'valor_anterior', type: 'jsonb', nullable: true })
   valorAnterior!: Record<string, unknown> | null;
 
-  @Column({
-    name: 'valor_novo',
-    type: 'nvarchar',
-    length: 'MAX',
-    transformer: jsonTransformer,
-  })
+  @Column({ name: 'valor_novo', type: 'jsonb' })
   valorNovo!: Record<string, unknown>;
 
-  @CreateDateColumn({ name: 'dthr_criacao', type: 'datetime2', precision: 3 })
+  @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
   @ManyToOne(() => ParametroAlerta)

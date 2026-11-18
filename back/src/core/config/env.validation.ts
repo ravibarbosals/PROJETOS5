@@ -1,9 +1,7 @@
-import { plainToInstance, Transform } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 import {
-  IsBoolean,
   IsEnum,
   IsInt,
-  IsNotEmpty,
   IsString,
   Matches,
   Max,
@@ -18,16 +16,6 @@ export enum NodeEnv {
   Production = 'production',
 }
 
-// Reads the raw value: enableImplicitConversion would turn 'false' into true.
-const toBoolean = ({
-  obj,
-  key,
-}: {
-  obj: Record<string, unknown>;
-  key: string;
-}) =>
-  obj[key] === undefined ? undefined : obj[key] === true || obj[key] === 'true';
-
 export class EnvironmentVariables {
   @IsEnum(NodeEnv)
   NODE_ENV: NodeEnv = NodeEnv.Development;
@@ -37,34 +25,10 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT: number = 3000;
 
-  @IsString()
-  @IsNotEmpty()
-  DB_HOST!: string;
-
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  DB_PORT: number = 1433;
-
-  @IsString()
-  @IsNotEmpty()
-  DB_USER!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  DB_PASSWORD!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  DB_NAME!: string;
-
-  @Transform(toBoolean)
-  @IsBoolean()
-  DB_ENCRYPT: boolean = true;
-
-  @Transform(toBoolean)
-  @IsBoolean()
-  DB_TRUST_SERVER_CERTIFICATE: boolean = false;
+  // postgresql://user:password@host:5432/database (DEC-024). On Neon, end
+  // with ?sslmode=verify-full.
+  @Matches(/^postgres(ql)?:\/\/.+/)
+  DATABASE_URL!: string;
 
   // DEC-013. At least 32 characters so a weak secret never reaches production.
   @IsString()

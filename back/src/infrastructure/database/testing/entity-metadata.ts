@@ -19,13 +19,7 @@ export async function loadEntityMetadata(
 ): Promise<(entity: EntityTarget<ObjectLiteral>) => EntityMetadata> {
   const dataSource = new MetadataOnlyDataSource({
     ...buildDatabaseOptions({
-      DB_HOST: 'localhost',
-      DB_PORT: 1433,
-      DB_USER: 'unused',
-      DB_PASSWORD: 'unused',
-      DB_NAME: 'unused',
-      DB_ENCRYPT: false,
-      DB_TRUST_SERVER_CERTIFICATE: true,
+      DATABASE_URL: 'postgresql://unused:unused@localhost:5432/unused',
     }),
     entities: entities as DataSource['options']['entities'],
   });
@@ -33,12 +27,15 @@ export async function loadEntityMetadata(
   return (entity) => dataSource.getMetadata(entity);
 }
 
-// Column names declared in "CREATE TABLE [schema].[table] (...)" of a migration's SQL.
+// Column names declared in "CREATE TABLE app.table (...)" of a migration's SQL.
+// Constraint lines (CONSTRAINT, and REFERENCES continuing a foreign key) are skipped.
 export function columnsCreatedIn(sql: string, table: string): string[] {
   const block = new RegExp(
-    String.raw`CREATE TABLE \[app\]\.\[${table}\] \(([\s\S]*?)\n\s*\)\s*$`,
+    String.raw`CREATE TABLE app\.${table} \(([\s\S]*?)\n\s*\)\s*$`,
     'm',
   ).exec(sql);
   if (!block) throw new Error(`CREATE TABLE app.${table} not found`);
-  return [...block[1].matchAll(/^\s*\[(\w+)\]\s+\w/gm)].map((m) => m[1]);
+  return [...block[1].matchAll(/^\s*(\w+)\s+\w/gm)]
+    .map((m) => m[1])
+    .filter((name) => name !== 'CONSTRAINT' && name !== 'REFERENCES');
 }

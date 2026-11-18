@@ -5,45 +5,39 @@ import { aplicarAmbienteE2e } from './e2e-ambiente';
 
 // Relative imports only: globalSetup does not go through moduleNameMapper.
 function conexao(database: string): DataSource {
-  const env = process.env;
+  const url = new URL(process.env.DATABASE_URL ?? '');
+  url.pathname = `/${database}`;
   return new DataSource({
-    ...buildDatabaseOptions({
-      DB_HOST: env.DB_HOST ?? 'localhost',
-      DB_PORT: Number(env.DB_PORT ?? 1433),
-      DB_USER: env.DB_USER ?? 'sa',
-      DB_PASSWORD: env.DB_PASSWORD ?? '',
-      DB_NAME: database,
-      DB_ENCRYPT: env.DB_ENCRYPT !== 'false',
-      DB_TRUST_SERVER_CERTIFICATE: env.DB_TRUST_SERVER_CERTIFICATE === 'true',
-    }),
+    ...buildDatabaseOptions({ DATABASE_URL: url.toString() }),
     migrations: [],
   });
 }
 
-async function executar(database: string, sql: string) {
+async function executar(database: string, sql: string): Promise<unknown[]> {
   const fonte = await conexao(database).initialize();
   try {
-    await fonte.query(sql);
+    return await fonte.query<unknown[]>(sql);
   } finally {
     await fonte.destroy();
   }
 }
 
-// Requires the SQL Server of compose.yml (docker compose up -d --wait).
+// Requires the PostgreSQL of compose.yml (docker compose up -d --wait).
 // Creates the e2e database and the app schema (what db-init does for the
 // development database) and applies the migrations with the same CLI as
 // production (DEC-008), so the e2e also prove the migrations.
 export default async function globalSetup() {
   const banco = aplicarAmbienteE2e();
 
-  await executar(
-    'master',
-    `IF DB_ID('${banco}') IS NULL CREATE DATABASE [${banco}]`,
+  // PostgreSQL has no CREATE DATABASE IF NOT EXISTS.
+  const existe = await executar(
+    'postgres',
+    `SELECT 1 FROM pg_database WHERE datname = '${banco}'`,
   );
-  await executar(
-    banco,
-    `IF SCHEMA_ID('app') IS NULL EXEC('CREATE SCHEMA app')`,
-  );
+  if (existe.length === 0) {
+    await executar('postgres', `CREATE DATABASE ${banco}`);
+  }
+  await executar(banco, 'CREATE SCHEMA IF NOT EXISTS app');
 
   try {
     execSync('npm run migration:run', { env: process.env, stdio: 'pipe' });

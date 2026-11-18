@@ -32,6 +32,6 @@ const TABELAS = [
 export async function limparBanco(app: AppE2e) {
   const fonte = app.get(DataSource);
   for (const tabela of TABELAS) {
-    await fonte.query(`DELETE FROM [app].[${tabela}]`);
+    await fonte.query(`DELETE FROM app.${tabela}`);
   }
 }

@@ -54,7 +54,7 @@ export class Alerta {
   })
   valorLido!: number;
 
-  @Column({ name: 'lida_em', type: 'datetime2', precision: 3 })
+  @Column({ name: 'lida_em', type: 'timestamptz', precision: 3 })
   lidaEm!: Date;
 
   @Column({
@@ -68,28 +68,28 @@ export class Alerta {
   // Start of the response time (RN-006).
   @Column({
     name: 'dthr_disparo',
-    type: 'datetime2',
+    type: 'timestamptz',
     precision: 3,
-    default: () => 'SYSUTCDATETIME()',
+    default: () => 'now()',
   })
   dthrDisparo!: Date;
 
   @Column({
     name: 'dthr_encerramento',
-    type: 'datetime2',
+    type: 'timestamptz',
     precision: 3,
     nullable: true,
   })
   dthrEncerramento!: Date | null;
 
-  @CreateDateColumn({ name: 'dthr_criacao', type: 'datetime2', precision: 3 })
+  @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
   @Column({
     name: 'dthr_atualizacao',
-    type: 'datetime2',
+    type: 'timestamptz',
     precision: 3,
-    default: () => 'SYSUTCDATETIME()',
+    default: () => 'now()',
   })
   dthrAtualizacao!: Date;
 

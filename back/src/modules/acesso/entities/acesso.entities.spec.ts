@@ -95,9 +95,9 @@ describe('CriaTabelasAcesso migration', () => {
     await new CriaTabelasAcesso1792900000000().down(runner);
 
     expect(statements).toEqual([
-      'DROP TABLE [app].[registro_acesso]',
-      'DROP TABLE [app].[usuario_papel]',
-      'DROP TABLE [app].[usuario]',
+      'DROP TABLE app.registro_acesso',
+      'DROP TABLE app.usuario_papel',
+      'DROP TABLE app.usuario',
     ]);
   });
 });

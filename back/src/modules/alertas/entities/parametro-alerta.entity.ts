@@ -34,18 +34,18 @@ export class ParametroAlerta {
   @Column({ name: 'nivel', type: 'varchar', length: 20 })
   nivel!: string;
 
-  @Column({ name: 'ativo', type: 'bit', default: true })
+  @Column({ name: 'ativo', type: 'boolean', default: true })
   ativo!: boolean;
 
-  @CreateDateColumn({ name: 'dthr_criacao', type: 'datetime2', precision: 3 })
+  @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
-  // Same reason as Usuario: UTC (DEC-017), set on save().
+  // Same as Usuario: set on save() (DEC-017).
   @Column({
     name: 'dthr_atualizacao',
-    type: 'datetime2',
+    type: 'timestamptz',
     precision: 3,
-    default: () => 'SYSUTCDATETIME()',
+    default: () => 'now()',
   })
   dthrAtualizacao!: Date;
 

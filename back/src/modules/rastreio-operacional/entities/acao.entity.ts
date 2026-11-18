@@ -15,7 +15,7 @@ export class Acao {
   @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;
 
-  @Column({ name: 'descricao', type: 'nvarchar', length: 2000 })
+  @Column({ name: 'descricao', type: 'varchar', length: 2000 })
   descricao!: string;
 
   // Optional link to the alert that motivated it (RN-004 #4, RN-006).
@@ -26,7 +26,7 @@ export class Acao {
   idUsuario!: number;
 
   // Server time (RN-004), also the timeline order (RN-005).
-  @CreateDateColumn({ name: 'dthr_criacao', type: 'datetime2', precision: 3 })
+  @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
   @ManyToOne(() => Alerta, { nullable: true })
