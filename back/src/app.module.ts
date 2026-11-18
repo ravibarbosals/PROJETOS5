@@ -19,7 +19,12 @@ import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastre
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
+    // DOTENV_CONFIG_PATH picks another file (.env.neon), as the TypeORM CLI does.
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnv,
+      envFilePath: process.env.DOTENV_CONFIG_PATH ?? '.env',
+    }),
     DatabaseModule,
     HealthModule,
     AcessoModule,

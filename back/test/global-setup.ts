@@ -1,4 +1,6 @@
 import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { DataSource } from 'typeorm';
 import { buildDatabaseOptions } from '../src/infrastructure/database/database.options';
 import { aplicarAmbienteE2e } from './e2e-ambiente';
@@ -23,9 +25,9 @@ async function executar(database: string, sql: string): Promise<unknown[]> {
 }
 
 // Requires the PostgreSQL of compose.yml (docker compose up -d --wait).
-// Creates the e2e database and the app schema (what db-init does for the
-// development database) and applies the migrations with the same CLI as
-// production (DEC-008), so the e2e also prove the migrations.
+// Creates the e2e database, the app schema (what db-init does for the
+// development database) and the pipeline schemas, then applies the migrations
+// with the same CLI as production (DEC-008), so the e2e also prove them.
 export default async function globalSetup() {
   const banco = aplicarAmbienteE2e();
 
@@ -38,6 +40,14 @@ export default async function globalSetup() {
     await executar('postgres', `CREATE DATABASE ${banco}`);
   }
   await executar(banco, 'CREATE SCHEMA IF NOT EXISTS app');
+  // Gold of the pipeline (read by MOD-005), from the same SQL used on Neon.
+  await executar(
+    banco,
+    readFileSync(
+      join(__dirname, '..', '..', 'dados', 'sql', 'schema.sql'),
+      'utf8',
+    ),
+  );
 
   try {
     execSync('npm run migration:run', { env: process.env, stdio: 'pipe' });
