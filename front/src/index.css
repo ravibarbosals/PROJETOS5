@@ -68,8 +68,9 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.707 0.165 254.624);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
+  /* DEC-028: chuva (azul) e temperatura (laranja). */
+  --chart-1: oklch(0.623 0.214 259.815);
+  --chart-2: oklch(0.705 0.213 47.604);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
@@ -103,8 +104,8 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
+  --chart-1: oklch(0.707 0.165 254.624);
+  --chart-2: oklch(0.75 0.183 55.934);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
