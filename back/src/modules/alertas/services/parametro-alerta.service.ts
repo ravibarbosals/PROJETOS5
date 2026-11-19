@@ -8,20 +8,35 @@ import {
   PaginateQuery,
 } from 'nestjs-paginate';
 import { DataSource, Repository } from 'typeorm';
+import { BusinessRuleException } from '@/core/exceptions/business-rule.exception';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
+import { AlertasRules } from '@/modules/alertas/alertas.business-rules';
 import {
+  aplicarCampos,
   CamposEditaveis,
+  camposDe,
   diferencaParametro,
+  limiaresValidos,
 } from '@/modules/alertas/domain/diferenca-parametro';
 import { ParametroAlertaHistorico } from '@/modules/alertas/entities/parametro-alerta-historico.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 
+// API names, also the history keys (RN-001).
 export interface CriarParametroAlerta {
   variavel: string;
   territorio: string;
   limiar: number;
-  nivel: string;
+  limiar_saida: number;
+  janela_horas: number;
+  nivel: NivelAlerta;
+}
+
+function exigirLimiaresValidos(campos: CamposEditaveis | CriarParametroAlerta) {
+  if (!limiaresValidos(campos)) {
+    throw new BusinessRuleException(AlertasRules.LIMIAR_SAIDA_INVALIDO);
+  }
 }
 
 // DEC-012.
@@ -63,10 +78,22 @@ export class ParametroAlertaService {
 
   // RN-001 #1 and #4: parameter and history in the same transaction.
   // The variable is not checked against the gold until DEC-009 exists.
-  criar(dados: CriarParametroAlerta, autor: Usuario): Promise<ParametroAlerta> {
+  async criar(
+    dados: CriarParametroAlerta,
+    autor: Usuario,
+  ): Promise<ParametroAlerta> {
+    exigirLimiaresValidos(dados);
     return this.dataSource.transaction(async (manager) => {
       const parametro = await manager.save(
-        manager.create(ParametroAlerta, { ...dados, ativo: true }),
+        manager.create(ParametroAlerta, {
+          variavel: dados.variavel,
+          territorio: dados.territorio,
+          limiar: dados.limiar,
+          limiarSaida: dados.limiar_saida,
+          janelaHoras: dados.janela_horas,
+          nivel: dados.nivel,
+          ativo: true,
+        }),
       );
       await manager.insert(ParametroAlertaHistorico, {
         idParametroAlerta: parametro.id,
@@ -93,10 +120,13 @@ export class ParametroAlertaService {
       });
       if (!parametro) throw new NotFoundException('Parâmetro não encontrado');
 
-      const diferenca = diferencaParametro(parametro, dados);
+      const atual = camposDe(parametro);
+      const diferenca = diferencaParametro(atual, dados);
       if (!diferenca) return parametro;
+      // Checked on the merged values: changing only one threshold can break the pair.
+      exigirLimiaresValidos({ ...atual, ...diferenca.novo });
 
-      Object.assign(parametro, diferenca.novo);
+      aplicarCampos(parametro, diferenca.novo);
       const salvo = await manager.save(parametro);
       await manager.insert(ParametroAlertaHistorico, {
         idParametroAlerta: id,

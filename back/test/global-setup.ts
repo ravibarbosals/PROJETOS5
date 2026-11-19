@@ -25,20 +25,16 @@ async function executar(database: string, sql: string): Promise<unknown[]> {
 }
 
 // Requires the PostgreSQL of compose.yml (docker compose up -d --wait).
-// Creates the e2e database, the app schema (what db-init does for the
-// development database) and the pipeline schemas, then applies the migrations
-// with the same CLI as production (DEC-008), so the e2e also prove them.
+// Recreates the e2e database (always "<db>_e2e", see e2e-ambiente.ts), the app
+// schema (what db-init does for the development database) and the pipeline
+// schemas, then applies every migration from scratch with the same CLI as
+// production (DEC-008), so the e2e also prove them and no run inherits the
+// data of the previous one.
 export default async function globalSetup() {
   const banco = aplicarAmbienteE2e();
 
-  // PostgreSQL has no CREATE DATABASE IF NOT EXISTS.
-  const existe = await executar(
-    'postgres',
-    `SELECT 1 FROM pg_database WHERE datname = '${banco}'`,
-  );
-  if (existe.length === 0) {
-    await executar('postgres', `CREATE DATABASE ${banco}`);
-  }
+  await executar('postgres', `DROP DATABASE IF EXISTS ${banco} WITH (FORCE)`);
+  await executar('postgres', `CREATE DATABASE ${banco}`);
   await executar(banco, 'CREATE SCHEMA IF NOT EXISTS app');
   // Gold of the pipeline (read by MOD-005), from the same SQL used on Neon.
   await executar(

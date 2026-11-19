@@ -1,31 +1,38 @@
 import { DataSource } from 'typeorm';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 import type { AppE2e } from './e2e-app';
 
 interface DadosAlerta {
   disparadoEm: Date;
   territorio?: string;
-  nivel?: string;
+  nivel?: NivelAlerta;
   status?: StatusAlerta;
 }
 
-// Alerts come from the job (TASK-035, blocked by the gold contract), so the
-// e2e insert them straight in the database, each with its own parameter.
+let sequencia = 0;
+
+// Alerts come from the job (TASK-035), so the e2e insert them straight in the
+// database, each with its own parameter and territory (RN-013: one active
+// alert per variable and territory).
 export async function criarAlerta(
   app: AppE2e,
   dados: DadosAlerta,
 ): Promise<Alerta> {
   const fonte = app.get(DataSource);
-  const territorio = dados.territorio ?? 'RPA-1';
-  const nivel = dados.nivel ?? 'ALTO';
+  const territorio = dados.territorio ?? `E2E-${++sequencia}`;
+  const nivel = dados.nivel ?? NivelAlerta.Alto;
   const parametro = await fonte.getRepository(ParametroAlerta).save({
     variavel: 'chuva_1h',
     territorio,
     limiar: 50,
+    limiarSaida: 20,
+    janelaHoras: 1,
     nivel,
   });
+  const lidaEm = new Date(dados.disparadoEm.getTime() - 5 * 60_000);
   return fonte.getRepository(Alerta).save({
     idParametroAlerta: parametro.id,
     variavel: parametro.variavel,
@@ -35,7 +42,9 @@ export async function criarAlerta(
     fonte: 'APAC',
     estacao: 'E2E',
     valorLido: 62.5,
-    lidaEm: new Date(dados.disparadoEm.getTime() - 5 * 60_000),
+    valorMaximo: 62.5,
+    lidaEm,
+    ultimaLeituraEm: lidaEm,
     status: dados.status ?? StatusAlerta.Ativo,
     dthrDisparo: dados.disparadoEm,
   });

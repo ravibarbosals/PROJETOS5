@@ -9,10 +9,13 @@ import {
 } from 'typeorm';
 import { decimalTransformer } from '@/infrastructure/database/transformers/decimal.transformer';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { MotivoEncerramento } from '@/modules/alertas/enums/motivo-encerramento.enum';
+import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 
-// RN-002. Parameter fields are copied at trigger time, so the alert does not
-// change if the parameter changes later. One alert per reading: RN-003.
+// RN-012. An incident per variable and territory (RN-013, DEC-029). Parameter
+// fields are copied at trigger or escalation time, so the alert does not change
+// if the parameter changes later.
 @Entity({ name: 'alerta' })
 export class Alerta {
   @PrimaryGeneratedColumn({ name: 'id' })
@@ -37,7 +40,7 @@ export class Alerta {
   limiar!: number;
 
   @Column({ name: 'nivel', type: 'varchar', length: 20 })
-  nivel!: string;
+  nivel!: NivelAlerta;
 
   @Column({ name: 'fonte', type: 'varchar', length: 50 })
   fonte!: string;
@@ -54,8 +57,31 @@ export class Alerta {
   })
   valorLido!: number;
 
+  // Reading that triggered the alert.
   @Column({ name: 'lida_em', type: 'timestamptz', precision: 3 })
   lidaEm!: Date;
+
+  // Highest value while active (RN-012 #4).
+  @Column({
+    name: 'valor_maximo',
+    type: 'decimal',
+    precision: 12,
+    scale: 3,
+    transformer: decimalTransformer,
+  })
+  valorMaximo!: number;
+
+  @Column({ name: 'ultima_leitura_em', type: 'timestamptz', precision: 3 })
+  ultimaLeituraEm!: Date;
+
+  // Until then the job does not close the alert by itself (RN-015 #6).
+  @Column({
+    name: 'prorrogado_ate',
+    type: 'timestamptz',
+    precision: 3,
+    nullable: true,
+  })
+  prorrogadoAte!: Date | null;
 
   @Column({
     name: 'status',
@@ -74,6 +100,15 @@ export class Alerta {
   })
   dthrDisparo!: Date;
 
+  // Last level increase (RN-012 #5).
+  @Column({
+    name: 'dthr_escalonamento',
+    type: 'timestamptz',
+    precision: 3,
+    nullable: true,
+  })
+  dthrEscalonamento!: Date | null;
+
   @Column({
     name: 'dthr_encerramento',
     type: 'timestamptz',
@@ -81,6 +116,14 @@ export class Alerta {
     nullable: true,
   })
   dthrEncerramento!: Date | null;
+
+  @Column({
+    name: 'motivo_encerramento',
+    type: 'varchar',
+    length: 12,
+    nullable: true,
+  })
+  motivoEncerramento!: MotivoEncerramento | null;
 
   @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;

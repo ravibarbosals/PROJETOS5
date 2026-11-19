@@ -39,6 +39,8 @@ const PARAMETRO = Object.assign(new ParametroAlerta(), {
   variavel: 'chuva_1h',
   territorio: 'RPA-1',
   limiar: 50,
+  limiarSaida: 20,
+  janelaHoras: 24,
   nivel: 'ALTO',
   ativo: true,
   dthrAtualizacao: ATUALIZADO_EM,
@@ -102,6 +104,8 @@ describe('ParametroAlertaController', () => {
     variavel: 'chuva_1h',
     territorio: 'RPA-1',
     limiar: 50,
+    limiar_saida: 20,
+    janela_horas: 24,
     nivel: 'ALTO',
   };
 
@@ -120,6 +124,8 @@ describe('ParametroAlertaController', () => {
           variavel: 'chuva_1h',
           territorio: 'RPA-1',
           limiar: 50,
+          limiar_saida: 20,
+          janela_horas: 24,
           nivel: 'ALTO',
           ativo: true,
           atualizado_em: ATUALIZADO_EM.toISOString(),
@@ -207,11 +213,27 @@ describe('ParametroAlertaController', () => {
 
       const body = response.body as { errors: { property: string }[] };
       expect(body.errors.map((e) => e.property).sort()).toEqual([
+        'janela_horas',
         'limiar',
+        'limiar_saida',
         'nivel',
         'territorio',
         'variavel',
       ]);
+    });
+
+    it.each([
+      ['an unknown level', { nivel: 'MEDIO' }],
+      ['a window of 0 hours', { janela_horas: 0 }],
+      ['a window above 72 hours', { janela_horas: 73 }],
+      ['a fractional window', { janela_horas: 1.5 }],
+    ])('answers 422 for %s (DEC-029)', async (_, campo) => {
+      await request(app.getHttpServer())
+        .post('/parametros-alerta')
+        .set(auth(1))
+        .send({ ...valido, ...campo })
+        .expect(422);
+      expect(service.criar).not.toHaveBeenCalled();
     });
 
     it('does not let PATCH change variable or territory', async () => {

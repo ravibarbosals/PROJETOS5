@@ -1,8 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
+import { HttpStatus, NotFoundException } from '@nestjs/common';
 import type { DataSource, EntityManager, Repository } from 'typeorm';
+import { BusinessRuleException } from '@/core/exceptions/business-rule.exception';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { ParametroAlertaHistorico } from '@/modules/alertas/entities/parametro-alerta-historico.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 import { ParametroAlertaService } from '@/modules/alertas/services/parametro-alerta.service';
 
@@ -14,7 +16,9 @@ function parametro(overrides: Partial<ParametroAlerta> = {}): ParametroAlerta {
     variavel: 'chuva_1h',
     territorio: 'RPA-1',
     limiar: 50,
-    nivel: 'ALTO',
+    limiarSaida: 20,
+    janelaHoras: 24,
+    nivel: NivelAlerta.Alto,
     ativo: true,
     ...overrides,
   });
@@ -49,7 +53,9 @@ const novo = {
   variavel: 'chuva_1h',
   territorio: 'RPA-1',
   limiar: 50,
-  nivel: 'ALTO',
+  limiar_saida: 20,
+  janela_horas: 24,
+  nivel: NivelAlerta.Alto,
 };
 
 describe('ParametroAlertaService (RN-001)', () => {
@@ -60,7 +66,12 @@ describe('ParametroAlertaService (RN-001)', () => {
 
     expect(dataSource.transaction).toHaveBeenCalledTimes(1);
     expect(manager.save.mock.calls[0][0]).toMatchObject({
-      ...novo,
+      variavel: 'chuva_1h',
+      territorio: 'RPA-1',
+      limiar: 50,
+      limiarSaida: 20,
+      janelaHoras: 24,
+      nivel: NivelAlerta.Alto,
       ativo: true,
     });
     expect(manager.insert).toHaveBeenCalledWith(ParametroAlertaHistorico, {
@@ -77,7 +88,7 @@ describe('ParametroAlertaService (RN-001)', () => {
 
     const salvo = await service.alterar(
       3,
-      { limiar: 60, nivel: 'ALTO' },
+      { limiar: 60, nivel: NivelAlerta.Alto },
       GESTOR,
     );
 
@@ -141,5 +152,35 @@ describe('ParametroAlertaService (RN-001)', () => {
     await expect(service.alterar(3, { limiar: 60 }, GESTOR)).rejects.toThrow(
       'falha ao gravar histórico',
     );
+  });
+
+  it('answers 422 when the exit threshold is not below the threshold (DEC-029)', async () => {
+    const { service, manager } = setup();
+
+    const erro = (await service
+      .criar({ ...novo, limiar_saida: 50 }, GESTOR)
+      .catch((e: unknown) => e)) as BusinessRuleException;
+    expect(erro).toBeInstanceOf(BusinessRuleException);
+    expect(erro.getStatus()).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
+    expect(erro.businessRuleCode).toBe('LIMIAR_SAIDA_INVALIDO');
+
+    // Only one threshold changes, but the pair becomes invalid (20 >= 15).
+    await expect(service.alterar(3, { limiar: 15 }, GESTOR)).rejects.toThrow(
+      BusinessRuleException,
+    );
+    expect(manager.save).not.toHaveBeenCalled();
+    expect(manager.insert).not.toHaveBeenCalled();
+  });
+
+  it('accepts lowering both thresholds together', async () => {
+    const { service } = setup();
+
+    const salvo = await service.alterar(
+      3,
+      { limiar: 15, limiar_saida: 5 },
+      GESTOR,
+    );
+
+    expect(salvo).toMatchObject({ limiar: 15, limiarSaida: 5 });
   });
 });

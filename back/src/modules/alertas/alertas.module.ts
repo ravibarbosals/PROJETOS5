@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AlertaAcaoManual } from '@/modules/alertas/entities/alerta-acao-manual.entity';
 import { AlertaController } from '@/modules/alertas/controllers/alerta.controller';
 import { ParametroAlertaController } from '@/modules/alertas/controllers/parametro-alerta.controller';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
@@ -14,6 +15,7 @@ import { PaineisModule } from '@/modules/paineis/paineis.module';
   imports: [
     TypeOrmModule.forFeature([
       Alerta,
+      AlertaAcaoManual,
       ParametroAlerta,
       ParametroAlertaHistorico,
     ]),

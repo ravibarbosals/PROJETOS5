@@ -1,5 +1,6 @@
 import { ParametroAlertaHistorico } from '@/modules/alertas/entities/parametro-alerta-historico.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 
 export class ParametroAlertaResponseDto {
@@ -7,7 +8,9 @@ export class ParametroAlertaResponseDto {
   variavel!: string;
   territorio!: string;
   limiar!: number;
-  nivel!: string;
+  limiar_saida!: number;
+  janela_horas!: number;
+  nivel!: NivelAlerta;
   ativo!: boolean;
   atualizado_em!: Date;
 
@@ -17,6 +20,8 @@ export class ParametroAlertaResponseDto {
       variavel: parametro.variavel,
       territorio: parametro.territorio,
       limiar: parametro.limiar,
+      limiar_saida: parametro.limiarSaida,
+      janela_horas: parametro.janelaHoras,
       nivel: parametro.nivel,
       ativo: parametro.ativo,
       atualizado_em: parametro.dthrAtualizacao,

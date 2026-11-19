@@ -1,8 +1,13 @@
+import type { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 
+// Editable fields with their API names, which are also the history keys (RN-001).
 export interface CamposEditaveis {
   limiar: number;
-  nivel: string;
+  limiar_saida: number;
+  janela_horas: number;
+  nivel: NivelAlerta;
   ativo: boolean;
 }
 
@@ -12,7 +17,46 @@ export interface DiferencaParametro {
   novo: Partial<CamposEditaveis>;
 }
 
-const CAMPOS: (keyof CamposEditaveis)[] = ['limiar', 'nivel', 'ativo'];
+const CAMPOS: (keyof CamposEditaveis)[] = [
+  'limiar',
+  'limiar_saida',
+  'janela_horas',
+  'nivel',
+  'ativo',
+];
+
+export function camposDe(parametro: ParametroAlerta): CamposEditaveis {
+  return {
+    limiar: parametro.limiar,
+    limiar_saida: parametro.limiarSaida,
+    janela_horas: parametro.janelaHoras,
+    nivel: parametro.nivel,
+    ativo: parametro.ativo,
+  };
+}
+
+export function aplicarCampos(
+  parametro: ParametroAlerta,
+  campos: Partial<CamposEditaveis>,
+): void {
+  if (campos.limiar !== undefined) parametro.limiar = campos.limiar;
+  if (campos.limiar_saida !== undefined) {
+    parametro.limiarSaida = campos.limiar_saida;
+  }
+  if (campos.janela_horas !== undefined) {
+    parametro.janelaHoras = campos.janela_horas;
+  }
+  if (campos.nivel !== undefined) parametro.nivel = campos.nivel;
+  if (campos.ativo !== undefined) parametro.ativo = campos.ativo;
+}
+
+// DEC-029: the alert closes below the exit threshold, so it must be lower.
+export function limiaresValidos(campos: {
+  limiar: number;
+  limiar_saida: number;
+}): boolean {
+  return campos.limiar_saida < campos.limiar;
+}
 
 // RN-001 #2: only the fields that actually change go to the history. Null when
 // nothing changes, so a no-op PATCH leaves no history line.

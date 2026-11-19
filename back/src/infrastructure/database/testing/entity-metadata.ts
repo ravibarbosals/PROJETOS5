@@ -27,7 +27,8 @@ export async function loadEntityMetadata(
   return (entity) => dataSource.getMetadata(entity);
 }
 
-// Column names declared in "CREATE TABLE app.table (...)" of a migration's SQL.
+// Column names of app.table after the migrations' SQL, in order: those declared
+// in "CREATE TABLE app.table (...)" plus "ADD COLUMN", minus "DROP COLUMN".
 // Constraint lines (CONSTRAINT, and REFERENCES continuing a foreign key) are skipped.
 export function columnsCreatedIn(sql: string, table: string): string[] {
   const block = new RegExp(
@@ -35,7 +36,17 @@ export function columnsCreatedIn(sql: string, table: string): string[] {
     'm',
   ).exec(sql);
   if (!block) throw new Error(`CREATE TABLE app.${table} not found`);
-  return [...block[1].matchAll(/^\s*(\w+)\s+\w/gm)]
+  const columns = [...block[1].matchAll(/^\s*(\w+)\s+\w/gm)]
     .map((m) => m[1])
     .filter((name) => name !== 'CONSTRAINT' && name !== 'REFERENCES');
+
+  const alter = new RegExp(
+    String.raw`ALTER TABLE app\.${table} (ADD|DROP) COLUMN (\w+)`,
+    'g',
+  );
+  for (const [, operation, name] of sql.matchAll(alter)) {
+    if (operation === 'ADD') columns.push(name);
+    else columns.splice(columns.indexOf(name), 1);
+  }
+  return columns;
 }

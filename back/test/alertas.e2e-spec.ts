@@ -1,5 +1,8 @@
 import request from 'supertest';
+import { DataSource } from 'typeorm';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
+import { Alerta } from '@/modules/alertas/entities/alerta.entity';
+import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 import { type AppE2e, criarAppE2e, limparBanco } from './helpers/e2e-app';
 import { criarAlerta } from './helpers/e2e-alertas';
 import { limparGold, registrarColeta } from './helpers/e2e-gold';
@@ -10,7 +13,8 @@ interface AlertaListado {
   fonte_atualizada_em: string | null;
 }
 
-// MOD-002, RN-007. The source date comes from the gold view, on a real database.
+// MOD-002, RN-007, RN-013. The source date comes from the gold view and the
+// single active alert from a partial index: both only on a real database.
 describe('Alertas (e2e)', () => {
   let app: AppE2e;
   let token: string;
@@ -58,5 +62,25 @@ describe('Alertas (e2e)', () => {
     const [alerta] = await listar();
 
     expect(alerta.fonte_atualizada_em).toBeNull();
+  });
+
+  it('keeps a single active alert per variable and territory (RN-013)', async () => {
+    const disparadoEm = new Date('2026-11-18T12:05:00Z');
+    const primeiro = await criarAlerta(app, {
+      disparadoEm,
+      territorio: 'RPA-1',
+    });
+
+    await expect(
+      criarAlerta(app, { disparadoEm, territorio: 'RPA-1' }),
+    ).rejects.toThrow(/uq_alerta_ativo_variavel_territorio/);
+
+    await app
+      .get(DataSource)
+      .getRepository(Alerta)
+      .update(primeiro.id, { status: StatusAlerta.Encerrado });
+    await expect(
+      criarAlerta(app, { disparadoEm, territorio: 'RPA-1' }),
+    ).resolves.toBeDefined();
   });
 });
