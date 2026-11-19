@@ -4,7 +4,7 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '@/app.module';
 
-// Requires the database from compose.yml: docker compose up -d db db-init
+// Precisa do banco do compose.yml: docker compose up -d db db-init
 describe('App (e2e)', () => {
   let app: INestApplication<App>;
 

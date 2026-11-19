@@ -3,7 +3,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export const SWAGGER_PATH = 'docs';
 
-// API documentation at /docs (UI) and /docs-json (OpenAPI). Not exposed in production.
+// Documentação da API em /docs (interface) e /docs-json (OpenAPI). Não fica
+// exposta em produção.
 export function setupSwagger(app: INestApplication) {
   const config = new DocumentBuilder()
     .setTitle('O Vigia API')

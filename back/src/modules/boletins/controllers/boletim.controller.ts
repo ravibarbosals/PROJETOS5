@@ -19,8 +19,9 @@ import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { GerarBoletimDto } from '@/modules/boletins/dto/gerar-boletim.dto';
 import { BoletimService } from '@/modules/boletins/services/boletim.service';
 
-// PER-012. RN-009. POST because the body carries the sections; nothing is saved.
-// Content type is set only on success (not with @Header), so errors stay JSON.
+// PER-012. RN-009. POST porque o corpo leva as seções; nada é gravado. O
+// content type só é definido no sucesso (não com @Header), para os erros
+// continuarem em JSON.
 @ApiTags('boletins')
 @ApiBearerAuth()
 @Controller('boletins')
@@ -41,7 +42,7 @@ export class BoletimController {
     return html;
   }
 
-  // RN-009 #4. Manual publication afterwards (AM-005 b).
+  // RN-009 #4. Publicação manual depois (AM-005 b).
   @Post('pdf')
   @HttpCode(HttpStatus.OK)
   @Papeis(Papel.Tecnico, Papel.Comunicacao)

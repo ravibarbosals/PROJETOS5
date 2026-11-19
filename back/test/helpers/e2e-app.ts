@@ -6,8 +6,9 @@ import { AppModule } from '@/app.module';
 
 export type AppE2e = INestApplication<App>;
 
-// The whole AppModule: pipe, filter and guard are its providers, exactly as in
-// main.ts. Swagger is the only thing main.ts adds, and it is not under test.
+// O AppModule inteiro: pipe, filtro e guard são providers dele, exatamente como
+// no main.ts. O Swagger é a única coisa que o main.ts acrescenta, e ele não
+// está sob teste.
 export async function criarAppE2e(): Promise<AppE2e> {
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
@@ -17,8 +18,8 @@ export async function criarAppE2e(): Promise<AppE2e> {
   return app;
 }
 
-// Foreign key order. controle_avaliacao_alerta keeps the single row the
-// migration created.
+// Ordem das chaves estrangeiras. controle_avaliacao_alerta mantém a linha única
+// criada pela migração.
 const TABELAS = [
   'acao',
   'alerta',

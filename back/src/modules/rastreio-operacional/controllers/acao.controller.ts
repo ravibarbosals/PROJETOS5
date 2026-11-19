@@ -13,7 +13,8 @@ import {
   AcaoService,
 } from '@/modules/rastreio-operacional/services/acao.service';
 
-// No PATCH or DELETE: actions are never edited or removed (RN-004 #5, DEC-014).
+// Sem PATCH nem DELETE: ações nunca são editadas nem removidas (RN-004 #5,
+// DEC-014).
 @ApiTags('acoes')
 @ApiBearerAuth()
 @Controller('acoes')

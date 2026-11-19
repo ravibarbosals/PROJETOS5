@@ -1,5 +1,5 @@
--- Schemas and gold tables of the data pipeline (DEC-024, docs: guia-dados etapa 2).
--- Idempotent: safe to run again on an existing database.
+-- Schemas e tabelas do gold da pipeline de dados (DEC-024, docs: guia-dados
+-- etapa 2). Idempotente: pode rodar de novo num banco que já existe.
 
 CREATE SCHEMA IF NOT EXISTS bronze;
 CREATE SCHEMA IF NOT EXISTS gold;

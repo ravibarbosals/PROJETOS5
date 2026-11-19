@@ -17,8 +17,9 @@ import { UsuarioService } from '@/modules/acesso/services/usuario.service';
 export const NAO_AUTENTICADO_MESSAGE = 'Faça login para continuar';
 export const SEM_PERMISSAO_MESSAGE = 'Você não tem permissão para esta ação';
 
-// Global guard (DEC-013, DEC-010): 401 without a valid token or for an inactive
-// user, 403 when the route requires roles the user does not have (ADM has all).
+// Guard global (DEC-013, DEC-010): 401 sem token válido ou para usuário
+// inativo, 403 quando a rota exige papéis que o usuário não tem (o ADM tem
+// todos).
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -41,7 +42,8 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException(NAO_AUTENTICADO_MESSAGE);
     });
 
-    // Loaded on every request so deactivation and role changes apply at once.
+    // Carregado a cada requisição, para inativação e troca de papéis valerem na
+    // hora.
     const usuario = await this.usuarios.buscarAutenticado(payload.sub);
     if (!usuario?.ativo)
       throw new UnauthorizedException(NAO_AUTENTICADO_MESSAGE);
@@ -51,7 +53,7 @@ export class AuthGuard implements CanActivate {
       PAPEIS_KEY,
       targets,
     );
-    // PR-023: the administrator also has every station role.
+    // PR-023: o administrador também tem todos os papéis das estações.
     if (exigidos?.length) {
       const temPapel = usuario.papeis.some(
         (p) => p.papel === Papel.Administrador || exigidos.includes(p.papel),

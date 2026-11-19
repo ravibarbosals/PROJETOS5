@@ -1,4 +1,5 @@
-// PostgreSQL error codes (SQLSTATE) the app translates into HTTP responses (DEC-010).
+// Códigos de erro do PostgreSQL (SQLSTATE) que a aplicação traduz em respostas
+// HTTP (DEC-010).
 export enum PostgresError {
   UniqueViolation = '23505',
   ForeignKeyViolation = '23503',

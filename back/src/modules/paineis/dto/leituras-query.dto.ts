@@ -2,7 +2,7 @@ import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PeriodoPainel } from '@/modules/paineis/enums/periodo-painel.enum';
 import { VariavelClimatica } from '@/modules/paineis/enums/variavel-climatica.enum';
 
-// MOD-005: GET /leituras filters.
+// MOD-005: filtros do GET /leituras.
 export class LeiturasQueryDto {
   /** Janela até agora: 24h, 7d ou 30d (padrão 24h, PR-018) */
   @IsOptional()

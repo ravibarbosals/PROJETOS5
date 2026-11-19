@@ -57,7 +57,7 @@ const pagina = <T>(data: T[]) => ({
   links: { current: '?page=1' },
 });
 
-// PER-004, PER-005 and the HTTP contract, with the real guard, pipe and filter.
+// PER-004, PER-005 e o contrato HTTP, com o guard, o pipe e o filtro reais.
 describe('ParametroAlertaController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

@@ -32,7 +32,7 @@ const USUARIOS: Record<number, Usuario> = {
 const URL =
   '/indicadores/tempo-acionamento?inicio=2026-11-01T00:00:00Z&fim=2026-11-07T23:59:59Z';
 
-// PER-009 and the period validation, with the real guard, pipe and filter.
+// PER-009 e a validação do período, com o guard, o pipe e o filtro reais.
 describe('IndicadorController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

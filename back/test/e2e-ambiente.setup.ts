@@ -1,4 +1,4 @@
 import { aplicarAmbienteE2e } from './e2e-ambiente';
 
-// Runs before each e2e file, so AppModule connects to the e2e database.
+// Roda antes de cada arquivo de e2e, para o AppModule conectar no banco de e2e.
 aplicarAmbienteE2e();

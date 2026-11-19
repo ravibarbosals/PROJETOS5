@@ -13,7 +13,7 @@ async function ciclo(): Promise<void> {
     await coletar(pool);
     await tratar(pool);
   } catch (erro) {
-    // A failed cycle (database offline, etc.) must not stop the next ones
+    // Um ciclo com falha (banco fora do ar etc.) não pode impedir os próximos
     console.error(`ciclo falhou: ${String(erro)}`);
   }
   if (!parando) {

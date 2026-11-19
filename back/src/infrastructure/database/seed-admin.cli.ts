@@ -1,4 +1,5 @@
-// Entry point for `npm run seed:admin` (TASK-016). Never runs on app boot.
+// Ponto de entrada do `npm run seed:admin` (TASK-016). Nunca roda na subida da
+// aplicação.
 import dataSource from '@/infrastructure/database/data-source';
 import {
   seedAdmin,

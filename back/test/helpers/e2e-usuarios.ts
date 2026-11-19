@@ -15,7 +15,7 @@ interface DadosUsuario {
   ativo?: boolean;
 }
 
-// Inserted straight in the database (state setup), with the real hasher.
+// Inserido direto no banco (preparação de estado), com o hasher real.
 export async function criarUsuario(
   app: AppE2e,
   papeis: Papel[],
@@ -48,7 +48,7 @@ export async function entrar(
   return (res.body as { access_token: string }).access_token;
 }
 
-// A logged-in user with the given roles.
+// Um usuário logado com os papéis informados.
 export async function logado(app: AppE2e, papeis: Papel[]) {
   const usuario = await criarUsuario(app, papeis);
   return { usuario, token: await entrar(app, usuario.email) };

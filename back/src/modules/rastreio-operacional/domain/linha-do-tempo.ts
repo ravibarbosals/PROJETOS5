@@ -1,9 +1,9 @@
-// RN-005: alerts triggered and actions registered, in chronological order.
+// RN-005: alertas disparados e ações registradas, em ordem cronológica.
 
 export type ItemLinhaDoTempo<A, C> =
   { tipo: 'ALERTA'; em: Date; alerta: A } | { tipo: 'ACAO'; em: Date; acao: C };
 
-// Same instant: the alert comes first, since an action responds to an alert.
+// Mesmo instante: o alerta vem primeiro, já que uma ação responde a um alerta.
 const ORDEM_NO_EMPATE = { ALERTA: 0, ACAO: 1 } as const;
 
 export function montarLinhaDoTempo<A, C>(

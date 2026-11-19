@@ -17,7 +17,8 @@ export interface CriarAcao {
   idAlerta?: number;
 }
 
-// DEC-012. Newest first; the chronological timeline is RN-005 (TASK-023).
+// DEC-012. Mais recentes primeiro; a linha do tempo cronológica é a RN-005
+// (TASK-023).
 export const ACAO_PAGINATE_CONFIG: PaginateConfig<Acao> = {
   sortableColumns: ['id', 'dthrCriacao'],
   defaultSortBy: [['dthrCriacao', 'DESC']],
@@ -34,7 +35,8 @@ export class AcaoService {
     @InjectRepository(Alerta) private readonly alertas: Repository<Alerta>,
   ) {}
 
-  // RN-004: author is the authenticated user; time is the server's (column default).
+  // RN-004: o autor é o usuário autenticado; a hora é a do servidor (default da
+  // coluna).
   async criar(dados: CriarAcao, autor: Usuario): Promise<Acao> {
     if (
       dados.idAlerta !== undefined &&

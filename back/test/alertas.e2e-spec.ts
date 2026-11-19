@@ -13,8 +13,8 @@ interface AlertaListado {
   fonte_atualizada_em: string | null;
 }
 
-// MOD-002, RN-007, RN-013. The source date comes from the gold view and the
-// single active alert from a partial index: both only on a real database.
+// MOD-002, RN-007, RN-013. A data da fonte vem da view do gold e o alerta ativo
+// único vem de um índice parcial: os dois só existem num banco de verdade.
 describe('Alertas (e2e)', () => {
   let app: AppE2e;
   let token: string;

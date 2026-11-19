@@ -32,7 +32,8 @@ import { UsuarioService } from '@/modules/acesso/services/usuario.service';
     PasswordHasher,
     UsuarioService,
     AuthService,
-    // Global: every route needs a token unless marked @Public().
+    // Global: toda rota exige token, a não ser que esteja marcada com
+    // @Public().
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
   exports: [TypeOrmModule, JwtModule, PasswordHasher, UsuarioService],

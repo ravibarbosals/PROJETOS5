@@ -29,7 +29,7 @@ export class ParametroAlertaResponseDto {
   }
 }
 
-// RN-001: who, when, before -> after.
+// RN-001: quem, quando, antes -> depois.
 export class ParametroAlertaHistoricoResponseDto {
   id!: number;
   operacao!: OperacaoHistorico;

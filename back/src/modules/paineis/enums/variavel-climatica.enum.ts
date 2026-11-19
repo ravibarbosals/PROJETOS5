@@ -1,4 +1,4 @@
-// Variables of gold.leitura_climatica (CHECK in dados/sql/schema.sql, DEC-024).
+// Variáveis de gold.leitura_climatica (CHECK em dados/sql/schema.sql, DEC-024).
 export enum VariavelClimatica {
   Precipitacao = 'precipitacao_mm',
   Temperatura = 'temperatura_c',

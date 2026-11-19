@@ -7,8 +7,8 @@ class ParametroResumoDto {
   limiar!: number;
 }
 
-// API shape of an alert (MOD-002 contract, DEC-011). Parameter fields are the
-// copy taken at trigger time, not the parameter's current values.
+// Formato de um alerta na API (contrato do MOD-002, DEC-011). Os campos do
+// parâmetro são a cópia feita no disparo, não os valores atuais do parâmetro.
 export class AlertaResponseDto {
   id!: number;
   nivel!: string;
@@ -39,7 +39,7 @@ export class AlertaResponseDto {
       fonte: alerta.fonte,
       lida_em: alerta.lidaEm,
       disparado_em: alerta.dthrDisparo,
-      // RN-007 #2: never the current time when the source date is unknown.
+      // RN-007 #2: nunca a hora atual quando a data da fonte é desconhecida.
       fonte_atualizada_em: fonteAtualizadaEm,
       status: alerta.status,
     };

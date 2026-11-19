@@ -1,4 +1,4 @@
-// RN-009 #1. Declaration order is the order of the sections in the bulletin.
+// RN-009 #1. A ordem de declaração é a ordem das seções no boletim.
 export enum SecaoBoletim {
   Cabecalho = 'cabecalho',
   Meteorologia = 'meteorologia',

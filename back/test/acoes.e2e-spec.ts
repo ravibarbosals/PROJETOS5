@@ -22,7 +22,7 @@ interface ItemApi {
   acao?: { id: number; descricao: string };
 }
 
-// Server and database clocks may differ a little (Docker on WSL).
+// Os relógios do servidor e do banco podem diferir um pouco (Docker no WSL).
 const TOLERANCIA_MS = 5 * 60_000;
 
 // PER-007, PER-008, RN-004, RN-005, DEC-014.

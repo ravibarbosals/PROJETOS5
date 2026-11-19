@@ -35,7 +35,7 @@ describe('extrairLeituras', () => {
   it('drops null values', () => {
     const leituras = extrairLeituras(payload, coletadoEm);
 
-    // 2 past hours x 4 variables, minus the null temperature
+    // 2 horas passadas x 4 variáveis, menos a temperatura nula
     assert.equal(leituras.length, 7);
   });
 

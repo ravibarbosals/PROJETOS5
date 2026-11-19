@@ -29,7 +29,7 @@ function usuario(id: number, papeis: Papel[]): Usuario {
 const ADMIN = usuario(1, [Papel.Administrador]);
 const GESTOR = usuario(2, [Papel.Gestor]);
 
-// PER-003 and the HTTP contract of /usuarios, with the real guard, pipe and filter.
+// PER-003 e o contrato HTTP de /usuarios, com o guard, o pipe e o filtro reais.
 describe('UsuarioController', () => {
   let app: INestApplication<App>;
   let tokenAdmin: string;

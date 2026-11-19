@@ -10,7 +10,8 @@ const URL =
 
 const em = (hora: string) => new Date(`2026-11-02T${hora}:00Z`);
 
-// PER-009, RN-006, PR-021. The grouped MIN() query only runs on a real database.
+// PER-009, RN-006, PR-021. A consulta agrupada com MIN() só roda num banco de
+// verdade.
 describe('Tempo de acionamento (e2e)', () => {
   let app: AppE2e;
   let gin: Awaited<ReturnType<typeof logado>>;
@@ -51,7 +52,7 @@ describe('Tempo de acionamento (e2e)', () => {
       disparadoEm: new Date('2026-11-03T10:00:00Z'),
     });
 
-    // RN-006 #1: the first one counts, whatever the insertion order.
+    // RN-006 #1: vale a primeira, seja qual for a ordem de inserção.
     for (const [idAlerta, hora] of [
       [comDuas.id, '10:30'],
       [comDuas.id, '10:10'],
@@ -64,7 +65,7 @@ describe('Tempo de acionamento (e2e)', () => {
         registradaEm: em(hora),
       });
     }
-    // Not linked: never counts.
+    // Não ligada: nunca conta.
     await registrarAcaoEm(app, {
       descricao: 'Avulsa',
       idUsuario: autor,
@@ -82,7 +83,7 @@ describe('Tempo de acionamento (e2e)', () => {
     expect(res.body).toEqual({
       inicio: '2026-11-02T00:00:00.000Z',
       fim: '2026-11-02T23:59:59.000Z',
-      // (600 s + 3600 s) / 2: the alert without action stays out (PR-021).
+      // (600 s + 3600 s) / 2: o alerta sem ação fica de fora (PR-021).
       media_segundos: 2100,
       alertas_com_acao: 2,
       alertas_sem_acao: 1,

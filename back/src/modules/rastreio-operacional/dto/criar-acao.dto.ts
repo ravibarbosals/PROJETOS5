@@ -11,7 +11,8 @@ import {
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
-// RN-004 #3: author and time are never accepted from the client (no such fields).
+// RN-004 #3: autor e horário nunca são aceitos do cliente (não existem esses
+// campos).
 export class CriarAcaoDto {
   /** O que foi feito */
   @Transform(trim)

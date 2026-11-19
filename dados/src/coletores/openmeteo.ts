@@ -7,8 +7,9 @@ export interface Coleta {
 
 const FONTE = 'openmeteo';
 
-// Recife, hourly data for the last 7 days and today, timestamps in UTC.
-// 7 past days fill the gaps while the system was off (the upsert does not duplicate)
+// Recife, dados por hora dos últimos 7 dias e de hoje, horários em UTC. Os 7
+// dias passados preenchem as lacunas de quando o sistema ficou desligado (o
+// upsert não duplica)
 const URL_OPENMETEO =
   'https://api.open-meteo.com/v1/forecast?' +
   new URLSearchParams({
@@ -36,7 +37,7 @@ export async function coletarOpenMeteo(): Promise<Coleta> {
       payload,
     };
   } catch (erro) {
-    // Network failure or timeout: no HTTP status, recorded as 0
+    // Falha de rede ou timeout: sem status HTTP, registrado como 0
     return {
       fonte: FONTE,
       url: URL_OPENMETEO,

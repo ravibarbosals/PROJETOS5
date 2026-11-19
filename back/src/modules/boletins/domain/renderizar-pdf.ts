@@ -8,8 +8,8 @@ import {
 } from '@/modules/boletins/domain/documento-boletim';
 import { SecaoBoletim } from '@/modules/boletins/enums/secao-boletim.enum';
 
-// Same document as the HTML preview (RN-009 #4, DEC-019); the font is set by
-// the caller (infrastructure/pdf).
+// Mesmo documento da pré-visualização em HTML (RN-009 #4, DEC-019); a fonte é
+// definida por quem chama (infrastructure/pdf).
 function blocoPdf(bloco: BlocoBoletim): Content {
   switch (bloco.tipo) {
     case 'paragrafo':
@@ -61,7 +61,7 @@ const dataIso = new Intl.DateTimeFormat('en-CA', {
   day: '2-digit',
 });
 
-// boletim-2026-11-02.pdf, with the date in Recife.
+// boletim-2026-11-02.pdf, com a data no Recife.
 export function nomeDoArquivo(geradoEm: Date): string {
   return `boletim-${dataIso.format(geradoEm)}.pdf`;
 }

@@ -11,7 +11,8 @@ import { logado } from './helpers/e2e-usuarios';
 const horasAtras = (horas: number) =>
   new Date(Date.now() - horas * 60 * 60 * 1000);
 
-// MOD-005, RN-007, PER-010. The join with the gold view only runs on a real database.
+// MOD-005, RN-007, PER-010. O join com a view do gold só roda num banco de
+// verdade.
 describe('Leituras e status das fontes (e2e)', () => {
   let app: AppE2e;
   let token: string;

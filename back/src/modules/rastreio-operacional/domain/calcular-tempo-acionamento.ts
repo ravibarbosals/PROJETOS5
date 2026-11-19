@@ -1,4 +1,5 @@
-// RN-006: response time = first linked action - alert trigger time.
+// RN-006: tempo de acionamento = primeira ação ligada - hora do disparo do
+// alerta.
 
 export interface AlertaComAcoes {
   dthrDisparo: Date;
@@ -6,14 +7,14 @@ export interface AlertaComAcoes {
 }
 
 export interface TempoAcionamento {
-  /** Average in milliseconds over alerts with at least one action; null if none. */
+  /** Média em milissegundos sobre os alertas com pelo menos uma ação; null se nenhum tiver. */
   mediaMs: number | null;
   alertasComAcao: number;
-  /** RN-006 #3 (DUV-032): reported apart, not averaged (PR-021). */
+  /** RN-006 #3 (DUV-032): contados à parte, fora da média (PR-021). */
   alertasSemAcao: number;
 }
 
-// RN-006 #1. Null when the alert has no linked action.
+// RN-006 #1. Nulo quando o alerta não tem ação ligada.
 export function tempoAcionamentoMs(alerta: AlertaComAcoes): number | null {
   if (alerta.acoes.length === 0) return null;
   const primeira = Math.min(
@@ -22,7 +23,7 @@ export function tempoAcionamentoMs(alerta: AlertaComAcoes): number | null {
   return primeira - alerta.dthrDisparo.getTime();
 }
 
-// RN-006 #2: average over the alerts of the period.
+// RN-006 #2: média sobre os alertas do período.
 export function calcularTempoAcionamento(
   alertas: AlertaComAcoes[],
 ): TempoAcionamento {

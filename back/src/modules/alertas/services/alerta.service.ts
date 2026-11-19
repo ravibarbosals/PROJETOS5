@@ -10,8 +10,9 @@ import {
 import { Repository } from 'typeorm';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 
-// DEC-012. Active and history in one list (filter by status), by level (PR-009).
-// Level order is not sortable until DUV-010 defines the scale.
+// DEC-012. Ativos e histórico numa lista só (filtro por status), por nível
+// (PR-009). O nível não entra na ordenação: como texto, ALTO viria antes de
+// MODERADO (DEC-029).
 export const ALERTA_PAGINATE_CONFIG: PaginateConfig<Alerta> = {
   sortableColumns: ['id', 'dthrDisparo', 'lidaEm'],
   defaultSortBy: [['dthrDisparo', 'DESC']],

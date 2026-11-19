@@ -2,7 +2,8 @@ import type { ParametroAlerta } from '@/modules/alertas/entities/parametro-alert
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 
-// Editable fields with their API names, which are also the history keys (RN-001).
+// Campos editáveis com os nomes da API, que também são as chaves do histórico
+// (RN-001).
 export interface CamposEditaveis {
   limiar: number;
   limiar_saida: number;
@@ -50,7 +51,8 @@ export function aplicarCampos(
   if (campos.ativo !== undefined) parametro.ativo = campos.ativo;
 }
 
-// DEC-029: the alert closes below the exit threshold, so it must be lower.
+// DEC-029: o alerta encerra abaixo do limiar de saída, então ele precisa ser
+// menor.
 export function limiaresValidos(campos: {
   limiar: number;
   limiar_saida: number;
@@ -58,8 +60,8 @@ export function limiaresValidos(campos: {
   return campos.limiar_saida < campos.limiar;
 }
 
-// RN-001 #2: only the fields that actually change go to the history. Null when
-// nothing changes, so a no-op PATCH leaves no history line.
+// RN-001 #2: só os campos que de fato mudam vão para o histórico. Nulo quando
+// nada muda, para um PATCH sem efeito não deixar linha no histórico.
 export function diferencaParametro(
   atual: CamposEditaveis,
   dados: Partial<CamposEditaveis>,
@@ -76,7 +78,8 @@ export function diferencaParametro(
     Object.assign(novo, { [campo]: dados[campo] });
   }
 
-  // RN-001 #3: deactivation is its own operation, even with other fields.
+  // RN-001 #3: a inativação é uma operação própria, mesmo junto com outros
+  // campos.
   const operacao =
     novo.ativo === false
       ? OperacaoHistorico.Inativacao

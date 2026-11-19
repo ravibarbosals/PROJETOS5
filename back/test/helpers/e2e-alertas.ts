@@ -14,9 +14,9 @@ interface DadosAlerta {
 
 let sequencia = 0;
 
-// Alerts come from the job (TASK-035), so the e2e insert them straight in the
-// database, each with its own parameter and territory (RN-013: one active
-// alert per variable and territory).
+// Os alertas vêm do job (TASK-035), então os e2e inserem direto no banco, cada
+// um com parâmetro e território próprios (RN-013: um alerta ativo por variável
+// e território).
 export async function criarAlerta(
   app: AppE2e,
   dados: DadosAlerta,
@@ -57,8 +57,8 @@ interface DadosAcao {
   registradaEm: Date;
 }
 
-// The API always stamps the server time (RN-004); a fixed time is only
-// possible straight in the database.
+// A API sempre carimba a hora do servidor (RN-004); uma hora fixa só é possível
+// direto no banco.
 export async function registrarAcaoEm(app: AppE2e, dados: DadosAcao) {
   await app
     .get(DataSource)

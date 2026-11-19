@@ -21,12 +21,12 @@ import {
   UsuarioService,
 } from '@/modules/acesso/services/usuario.service';
 
-// Invalid :id is 422 like any other invalid input (DEC-010).
+// :id inválido dá 422, como qualquer outra entrada inválida (DEC-010).
 const IdPipe = new ParseIntPipe({
   errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
 });
 
-// PER-003: administrator only.
+// PER-003: só o administrador.
 @ApiTags('usuarios')
 @ApiBearerAuth()
 @Papeis(Papel.Administrador)

@@ -5,7 +5,7 @@ class AutorDto {
   nome!: string;
 }
 
-// API shape of an action (MOD-003 contract, DEC-011).
+// Formato de uma ação na API (contrato do MOD-003, DEC-011).
 export class AcaoResponseDto {
   id!: number;
   descricao!: string;

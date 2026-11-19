@@ -53,7 +53,7 @@ const ALERTA = Object.assign(new Alerta(), {
   dthrEncerramento: null,
 });
 
-// PER-006 and the MOD-002 contract, with the real guard, pipe and filter.
+// PER-006 e o contrato do MOD-002, com o guard, o pipe e o filtro reais.
 describe('AlertaController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

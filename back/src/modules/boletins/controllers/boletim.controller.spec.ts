@@ -34,7 +34,7 @@ const USUARIOS: Record<number, Usuario> = {
 const PREVIA = '/boletins/pre-visualizacao';
 const PDF = '/boletins/pdf';
 
-// PER-012 and RN-009 #2/#3, with the real guard, pipe and filter.
+// PER-012 e RN-009 #2/#3, com o guard, o pipe e o filtro reais.
 describe('BoletimController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

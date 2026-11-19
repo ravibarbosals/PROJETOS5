@@ -19,7 +19,7 @@ export class Usuario {
   @Column({ name: 'email', type: 'varchar', length: 254 })
   email!: string;
 
-  // Never returned by default queries (DEC-013).
+  // Nunca devolvido pelas consultas padrão (DEC-013).
   @Column({ name: 'senha_hash', type: 'varchar', length: 255, select: false })
   senhaHash!: string;
 
@@ -29,7 +29,7 @@ export class Usuario {
   @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
-  // Not @UpdateDateColumn: set by the entity itself on save() (DEC-017).
+  // Não é @UpdateDateColumn: a própria entidade preenche no save() (DEC-017).
   @Column({
     name: 'dthr_atualizacao',
     type: 'timestamptz',

@@ -23,7 +23,7 @@ import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.ent
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 
-// API names, also the history keys (RN-001).
+// Nomes da API, que também são as chaves do histórico (RN-001).
 export interface CriarParametroAlerta {
   variavel: string;
   territorio: string;
@@ -56,7 +56,7 @@ export const PARAMETRO_ALERTA_PAGINATE_CONFIG: PaginateConfig<ParametroAlerta> =
     maxLimit: 100,
   };
 
-// DEC-012. Newest change first.
+// DEC-012. Alteração mais recente primeiro.
 export const HISTORICO_PAGINATE_CONFIG: PaginateConfig<ParametroAlertaHistorico> =
   {
     sortableColumns: ['id', 'dthrCriacao'],
@@ -76,8 +76,8 @@ export class ParametroAlertaService {
     private readonly dataSource: DataSource,
   ) {}
 
-  // RN-001 #1 and #4: parameter and history in the same transaction.
-  // The variable is not checked against the gold until DEC-009 exists.
+  // RN-001 #1 e #4: parâmetro e histórico na mesma transação. A variável não é
+  // conferida com o gold enquanto a DEC-009 não existir.
   async criar(
     dados: CriarParametroAlerta,
     autor: Usuario,
@@ -106,8 +106,8 @@ export class ParametroAlertaService {
     });
   }
 
-  // RN-001 #2 to #4. The row is locked while the previous value is read, so two
-  // concurrent edits each record what they actually replaced.
+  // RN-001 #2 a #4. A linha fica travada enquanto o valor anterior é lido, para
+  // duas edições simultâneas registrarem cada uma o que de fato substituíram.
   alterar(
     id: number,
     dados: Partial<CamposEditaveis>,
@@ -123,7 +123,8 @@ export class ParametroAlertaService {
       const atual = camposDe(parametro);
       const diferenca = diferencaParametro(atual, dados);
       if (!diferenca) return parametro;
-      // Checked on the merged values: changing only one threshold can break the pair.
+      // Conferido nos valores já mesclados: mudar só um limiar pode quebrar o
+      // par.
       exigirLimiaresValidos({ ...atual, ...diferenca.novo });
 
       aplicarCampos(parametro, diferenca.novo);

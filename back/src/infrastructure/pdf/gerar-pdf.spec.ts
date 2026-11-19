@@ -1,6 +1,6 @@
 import { FONTE, gerarPdf } from '@/infrastructure/pdf/gerar-pdf';
 
-// Real pdfmake, no mocks: generation takes a few milliseconds.
+// pdfmake de verdade, sem mock: a geração leva poucos milissegundos.
 describe('gerarPdf (DEC-019)', () => {
   it('generates a PDF with the standard font, accents included', async () => {
     const pdf = await gerarPdf({

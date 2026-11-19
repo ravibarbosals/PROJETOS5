@@ -24,7 +24,7 @@ import { AuthService } from '@/modules/acesso/services/auth.service';
 export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
-  // PER-001: open to everyone.
+  // PER-001: aberto a todos.
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -33,7 +33,7 @@ export class AuthController {
     return this.auth.login(dto.email, dto.senha);
   }
 
-  // PER-002: any logged-in user.
+  // PER-002: qualquer usuário logado.
   @Get('me')
   @ApiBearerAuth()
   me(@UsuarioAtual() usuario: Usuario): UsuarioResponseDto {

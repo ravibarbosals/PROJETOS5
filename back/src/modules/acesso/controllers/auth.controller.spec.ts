@@ -11,7 +11,8 @@ import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { AuthService } from '@/modules/acesso/services/auth.service';
 
-// HTTP contract of POST /auth/login with the real pipe and filter; the service is mocked.
+// Contrato HTTP do POST /auth/login com o pipe e o filtro reais; o service é
+// mockado.
 describe('AuthController', () => {
   let app: INestApplication<App>;
   const auth = { login: jest.fn() };

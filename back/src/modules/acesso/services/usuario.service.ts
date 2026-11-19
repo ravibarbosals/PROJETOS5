@@ -34,7 +34,8 @@ export interface AlterarUsuario {
   ativo?: boolean;
 }
 
-// DEC-012. ORDER BY is always present, which SQL Server requires for OFFSET.
+// DEC-012. O ORDER BY está sempre presente, exigência do SQL Server para o
+// OFFSET.
 export const USUARIO_PAGINATE_CONFIG: PaginateConfig<Usuario> = {
   sortableColumns: ['id', 'nome', 'email', 'dthrCriacao'],
   defaultSortBy: [['nome', 'ASC']],
@@ -53,7 +54,7 @@ export function normalizarEmail(email: string): string {
 
 function papeisUnicos(papeis: Papel[]): Papel[] {
   const unicos = [...new Set(papeis)];
-  // RN-010 #3 (also enforced by the DTO).
+  // RN-010 #3 (também garantida pelo DTO).
   if (unicos.length === 0)
     throw new UnprocessableEntityException(SEM_PAPEL_MESSAGE);
   return unicos;
@@ -67,7 +68,7 @@ export class UsuarioService {
     private readonly hasher: PasswordHasher,
   ) {}
 
-  // RN-010: only the administrator creates accounts (guard in the controller).
+  // RN-010: só o administrador cria contas (guard no controller).
   async criar(dados: CriarUsuario): Promise<Usuario> {
     const email = normalizarEmail(dados.email);
     const papeis = papeisUnicos(dados.papeis);
@@ -88,7 +89,8 @@ export class UsuarioService {
       const salvo = await this.usuarios.save(usuario);
       return this.buscarPorId(salvo.id);
     } catch (error) {
-      // Two requests with the same e-mail at the same time: the unique index wins.
+      // Duas requisições com o mesmo e-mail ao mesmo tempo: o índice único
+      // decide.
       if (isUniqueViolation(error)) {
         throw new BusinessRuleException(AcessoRules.EMAIL_JA_CADASTRADO);
       }
@@ -122,11 +124,11 @@ export class UsuarioService {
       }
 
       if (dados.nome !== undefined) usuario.nome = dados.nome.trim();
-      // PR-020: the administrator resets the password.
+      // PR-020: o administrador redefine a senha.
       if (dados.senha !== undefined) {
         usuario.senhaHash = await this.hasher.hash(dados.senha);
       }
-      // DEC-014: users are deactivated, never deleted.
+      // DEC-014: usuários são inativados, nunca apagados.
       if (dados.ativo !== undefined) usuario.ativo = dados.ativo;
       usuario.dthrAtualizacao = new Date();
 
@@ -149,7 +151,7 @@ export class UsuarioService {
     return usuario;
   }
 
-  // Used by AuthGuard on every request; null instead of 404.
+  // Usado pelo AuthGuard a cada requisição; null em vez de 404.
   buscarAutenticado(id: number): Promise<Usuario | null> {
     return this.usuarios.findOne({
       where: { id },
@@ -157,7 +159,8 @@ export class UsuarioService {
     });
   }
 
-  // Only for authentication (TASK-013): the one query that loads the password hash.
+  // Só para a autenticação (TASK-013): a única consulta que carrega o hash da
+  // senha.
   buscarParaLogin(email: string): Promise<Usuario | null> {
     return this.usuarios
       .createQueryBuilder('usuario')

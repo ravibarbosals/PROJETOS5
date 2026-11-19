@@ -3,5 +3,6 @@ import { Papel } from '@/modules/acesso/enums/papel.enum';
 
 export const PAPEIS_KEY = 'papeis';
 
-// Roles allowed on a route (permissoes.md). A user with any of them passes (AM-004 c).
+// Papéis permitidos numa rota (permissoes.md). Basta o usuário ter um deles
+// (AM-004 c).
 export const Papeis = (...papeis: Papel[]) => SetMetadata(PAPEIS_KEY, papeis);

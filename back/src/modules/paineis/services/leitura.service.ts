@@ -10,13 +10,13 @@ interface LinhaLeitura {
   estacao: string;
   territorio: string;
   variavel: VariavelClimatica;
-  // numeric comes from pg as string
+  // numeric chega do pg como string
   valor: string;
   lida_em: Date;
   fonte_atualizada_em: Date | null;
 }
 
-// Read-only over the gold schema, written by the pipeline (PR-007, DEC-024).
+// Só leitura sobre o schema gold, gravado pela pipeline (PR-007, DEC-024).
 @Injectable()
 export class LeituraService {
   constructor(private readonly dataSource: DataSource) {}

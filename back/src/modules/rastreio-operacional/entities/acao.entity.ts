@@ -9,7 +9,7 @@ import {
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 
-// RN-004: who, what and when. Insert-only, never edited (DEC-014).
+// RN-004: quem, o quê e quando. Só inserção, nunca editada (DEC-014).
 @Entity({ name: 'acao' })
 export class Acao {
   @PrimaryGeneratedColumn({ name: 'id' })
@@ -18,14 +18,14 @@ export class Acao {
   @Column({ name: 'descricao', type: 'varchar', length: 2000 })
   descricao!: string;
 
-  // Optional link to the alert that motivated it (RN-004 #4, RN-006).
+  // Ligação opcional com o alerta que motivou a ação (RN-004 #4, RN-006).
   @Column({ name: 'id_alerta', type: 'int', nullable: true })
   idAlerta!: number | null;
 
   @Column({ name: 'id_usuario', type: 'int' })
   idUsuario!: number;
 
-  // Server time (RN-004), also the timeline order (RN-005).
+  // Hora do servidor (RN-004), também a ordem da linha do tempo (RN-005).
   @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 

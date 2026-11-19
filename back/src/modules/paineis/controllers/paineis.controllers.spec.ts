@@ -26,7 +26,7 @@ const PAPEIS = [
   Papel.Administrador,
 ];
 
-// One user per role: id = position + 1.
+// Um usuário por papel: id = posição + 1.
 const USUARIOS: Record<number, Usuario> = Object.fromEntries(
   PAPEIS.map((papel, i) => [
     i + 1,
@@ -39,7 +39,7 @@ const USUARIOS: Record<number, Usuario> = Object.fromEntries(
   ]),
 );
 
-// PER-010 and the MOD-005 filters, with the real guard, pipe and filter.
+// PER-010 e os filtros do MOD-005, com o guard, o pipe e o filtro reais.
 describe('LeituraController and FonteController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

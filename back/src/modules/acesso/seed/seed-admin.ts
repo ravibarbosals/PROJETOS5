@@ -18,7 +18,7 @@ import { normalizarEmail } from '@/modules/acesso/services/usuario.service';
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
-// TASK-016. Same limits as CriarUsuarioDto (RN-010, PR-020).
+// TASK-016. Mesmos limites do CriarUsuarioDto (RN-010, PR-020).
 export class SeedAdminEnv {
   @Transform(trim)
   @IsString()
@@ -52,9 +52,9 @@ export function validateSeedAdminEnv(config: Record<string, unknown>) {
 
 export type SeedAdminResultado = 'criado' | 'ja-existe';
 
-// Idempotent: once any ADM exists, nothing is created or changed (the password
-// is never overwritten). An existing non-ADM account with the same e-mail is
-// not promoted silently.
+// Idempotente: se já existe algum ADM, nada é criado nem alterado (a senha
+// nunca é sobrescrita). Uma conta que não é ADM com o mesmo e-mail não é
+// promovida em silêncio.
 export async function seedAdmin(
   dataSource: DataSource,
   hasher: PasswordHasher,

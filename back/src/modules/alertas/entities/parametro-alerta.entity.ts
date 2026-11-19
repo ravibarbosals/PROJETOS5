@@ -8,17 +8,17 @@ import {
 import { decimalTransformer } from '@/infrastructure/database/transformers/decimal.transformer';
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 
-// RN-001. Never deleted, only deactivated (DEC-014).
+// RN-001. Nunca apagado, só inativado (DEC-014).
 @Entity({ name: 'parametro_alerta' })
 export class ParametroAlerta {
   @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;
 
-  // Value of gold.leitura_climatica.variavel (DEC-009).
+  // Valor de gold.leitura_climatica.variavel (DEC-009).
   @Column({ name: 'variavel', type: 'varchar', length: 50 })
   variavel!: string;
 
-  // Territory identifier from the gold (DUV-009).
+  // Identificador do território vindo do gold (DUV-009).
   @Column({ name: 'territorio', type: 'varchar', length: 50 })
   territorio!: string;
 
@@ -31,7 +31,7 @@ export class ParametroAlerta {
   })
   limiar!: number;
 
-  // Hysteresis: the alert only closes below this value (DEC-029, RN-015 #1).
+  // Histerese: o alerta só encerra abaixo deste valor (DEC-029, RN-015 #1).
   @Column({
     name: 'limiar_saida',
     type: 'decimal',
@@ -41,7 +41,8 @@ export class ParametroAlerta {
   })
   limiarSaida!: number;
 
-  // Rain is summed over the last N hours; other variables use the last reading (RN-012).
+  // A chuva é somada nas últimas N horas; as outras variáveis usam a última
+  // leitura (RN-012).
   @Column({ name: 'janela_horas', type: 'smallint' })
   janelaHoras!: number;
 
@@ -54,7 +55,7 @@ export class ParametroAlerta {
   @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 
-  // Same as Usuario: set on save() (DEC-017).
+  // Igual ao Usuario: preenchido no save() (DEC-017).
   @Column({
     name: 'dthr_atualizacao',
     type: 'timestamptz',

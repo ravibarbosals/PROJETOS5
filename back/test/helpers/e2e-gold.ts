@@ -1,8 +1,8 @@
 import { DataSource } from 'typeorm';
 import type { AppE2e } from './e2e-app';
 
-// The gold belongs to the pipeline (PR-007): the app never writes there, so the
-// e2e fill it straight in the database, as the pipeline would.
+// O gold é da pipeline (PR-007): a aplicação nunca grava lá, então os e2e
+// preenchem direto no banco, como a pipeline faria.
 export async function limparGold(app: AppE2e) {
   const fonte = app.get(DataSource);
   await fonte.query('DELETE FROM gold.leitura_climatica');
@@ -24,7 +24,7 @@ export async function inserirLeitura(app: AppE2e, dados: DadosLeitura) {
   );
 }
 
-// gold.fonte_status is a view over successful collections.
+// gold.fonte_status é uma view sobre as coletas bem-sucedidas.
 export async function registrarColeta(
   app: AppE2e,
   fonte: string,

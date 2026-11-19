@@ -9,7 +9,7 @@ import { FonteStatusService } from '@/modules/paineis/services/fonte-status.serv
 export class FonteController {
   constructor(private readonly fontes: FonteStatusService) {}
 
-  // PER-010: every logged-in role, so no @Papeis.
+  // PER-010: todo papel logado, por isso sem @Papeis.
   @Get('status')
   listarStatus(): Promise<FonteStatusResponseDto[]> {
     return this.fontes.listar();

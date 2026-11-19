@@ -1,7 +1,7 @@
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
 
-// API shape of a user (DEC-011): snake_case, never the password hash.
+// Formato de um usuário na API (DEC-011): snake_case, nunca o hash da senha.
 export class UsuarioResponseDto {
   id!: number;
   nome!: string;

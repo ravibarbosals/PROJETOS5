@@ -14,12 +14,13 @@ const ESCAPES: Record<string, string> = {
   "'": '&#39;',
 };
 
-// Action descriptions are user input: everything is escaped.
+// As descrições das ações são digitadas pelo usuário: tudo é escapado.
 export function escaparHtml(texto: string): string {
   return texto.replace(/[&<>"']/g, (caractere) => ESCAPES[caractere]);
 }
 
-// Self-contained page (inline style), so the front can show it in an iframe.
+// Página autossuficiente (estilo inline), para o front poder mostrar num
+// iframe.
 const ESTILO = `
 body { font-family: Arial, Helvetica, sans-serif; color: #1a1a1a; margin: 32px; line-height: 1.5; }
 header { border-bottom: 2px solid #1d4ed8; margin-bottom: 24px; padding-bottom: 8px; }

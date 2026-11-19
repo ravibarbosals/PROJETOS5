@@ -16,8 +16,8 @@ export interface JwtPayload {
 
 @Injectable()
 export class AuthService {
-  // Compared against when the e-mail does not exist, so the response time does
-  // not reveal which e-mails are registered.
+  // Usado na comparação quando o e-mail não existe, para o tempo de resposta
+  // não revelar quais e-mails estão cadastrados.
   private dummyHash?: Promise<string>;
 
   constructor(
@@ -45,7 +45,7 @@ export class AuthService {
       sucesso,
     });
 
-    // Same message for unknown e-mail, wrong password and inactive user.
+    // Mesma mensagem para e-mail inexistente, senha errada e usuário inativo.
     if (!usuario || !sucesso)
       throw new UnauthorizedException(LOGIN_INVALIDO_MESSAGE);
 

@@ -6,8 +6,8 @@ import {
 } from 'typeorm';
 import { buildDatabaseOptions } from '@/infrastructure/database/database.options';
 
-// Builds TypeORM metadata without opening a connection, so unit tests can check
-// that entities mirror the migrations (erd.md).
+// Monta os metadados do TypeORM sem abrir conexão, para os testes unitários
+// conferirem se as entidades espelham as migrações (erd.md).
 class MetadataOnlyDataSource extends DataSource {
   build() {
     return this.buildMetadatas();
@@ -27,9 +27,10 @@ export async function loadEntityMetadata(
   return (entity) => dataSource.getMetadata(entity);
 }
 
-// Column names of app.table after the migrations' SQL, in order: those declared
-// in "CREATE TABLE app.table (...)" plus "ADD COLUMN", minus "DROP COLUMN".
-// Constraint lines (CONSTRAINT, and REFERENCES continuing a foreign key) are skipped.
+// Nomes das colunas de app.tabela depois do SQL das migrações, em ordem: as
+// declaradas em "CREATE TABLE app.tabela (...)" mais "ADD COLUMN", menos "DROP
+// COLUMN". Linhas de constraint (CONSTRAINT, e REFERENCES continuando uma chave
+// estrangeira) são ignoradas.
 export function columnsCreatedIn(sql: string, table: string): string[] {
   const block = new RegExp(
     String.raw`CREATE TABLE app\.${table} \(([\s\S]*?)\n\s*\)\s*$`,

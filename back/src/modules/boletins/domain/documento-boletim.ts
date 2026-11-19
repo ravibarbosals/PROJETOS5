@@ -3,7 +3,8 @@ import {
   SecaoBoletim,
 } from '@/modules/boletins/enums/secao-boletim.enum';
 
-// One structure for the HTML preview and the PDF (DEC-019, RN-009 #4).
+// Uma estrutura só para a pré-visualização em HTML e para o PDF (DEC-019,
+// RN-009 #4).
 export type BlocoBoletim =
   | { tipo: 'paragrafo'; texto: string }
   | { tipo: 'aviso'; texto: string }
@@ -47,7 +48,8 @@ const TITULO_SECAO: Record<SecaoBoletim, string> = {
   [SecaoBoletim.Contatos]: 'Contatos de emergência',
 };
 
-// PR-022 c: no source yet, so the section says so instead of inventing text.
+// PR-022 c: ainda não há fonte, então a seção diz isso em vez de inventar
+// texto.
 const SEM_DADOS_INTEGRADOS =
   'Conteúdo indisponível: estes dados ainda não estão integrados ao sistema.';
 const SEM_ORIGEM_DEFINIDA =
@@ -65,7 +67,7 @@ export function formatarDataHora(data: Date): string {
   return dataHora.format(data);
 }
 
-// RN-009 #1 order; a repeated section enters once (PR-022 d).
+// Ordem da RN-009 #1; uma seção repetida entra uma vez só (PR-022 d).
 export function ordenarSecoes(secoes: readonly SecaoBoletim[]): SecaoBoletim[] {
   return ORDEM_SECOES.filter((secao) => secoes.includes(secao));
 }

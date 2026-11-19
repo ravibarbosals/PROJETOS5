@@ -6,7 +6,7 @@ import {
   TypeOrmHealthIndicator,
 } from '@nestjs/terminus';
 
-// PER-013: open (Docker healthcheck).
+// PER-013: aberto (healthcheck do Docker).
 @Public()
 @Controller('health')
 export class HealthController {

@@ -11,7 +11,7 @@ import {
 } from '@/modules/rastreio-operacional/dto/linha-do-tempo-response.dto';
 import { Acao } from '@/modules/rastreio-operacional/entities/acao.entity';
 
-// RN-005 #2: until DUV-030 defines an "event", the timeline is a period.
+// RN-005 #2: até a DUV-030 definir "evento", a linha do tempo é por período.
 @Injectable()
 export class LinhaDoTempoService {
   constructor(

@@ -2,8 +2,8 @@ import { PartialType, PickType } from '@nestjs/swagger';
 import { IsBoolean, IsOptional } from 'class-validator';
 import { CriarParametroAlertaDto } from '@/modules/alertas/dto/criar-parametro-alerta.dto';
 
-// RN-001 #2: thresholds, window and level change. Variable and territory
-// identify the parameter; a different pair is a new parameter.
+// RN-001 #2: limiares, janela e nível mudam. Variável e território identificam
+// o parâmetro; outro par é outro parâmetro.
 export class AlterarParametroAlertaDto extends PartialType(
   PickType(CriarParametroAlertaDto, [
     'limiar',

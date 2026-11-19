@@ -1,8 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-// DEC-029: alert as an incident per variable and territory (RN-012, RN-013)
-// and its closing (RN-015). New NOT NULL columns have no default on purpose:
-// there were no parameters or alerts when this ran.
+// DEC-029: alerta como incidente por variável e território (RN-012, RN-013) e o
+// seu encerramento (RN-015). As colunas NOT NULL novas não têm default de
+// propósito: não havia parâmetros nem alertas quando esta migração rodou.
 export class EvoluiAlertaParaIncidente1792900000002 implements MigrationInterface {
   name = 'EvoluiAlertaParaIncidente1792900000002';
 
@@ -23,7 +23,7 @@ export class EvoluiAlertaParaIncidente1792900000002 implements MigrationInterfac
       `ALTER TABLE app.parametro_alerta ADD CONSTRAINT ck_parametro_alerta_nivel CHECK (nivel IN ('MODERADO', 'ALTO'))`,
     );
 
-    // RN-003 (one alert per reading) was replaced by RN-013.
+    // A RN-003 (um alerta por leitura) foi substituída pela RN-013.
     await queryRunner.query(
       `ALTER TABLE app.alerta DROP CONSTRAINT uq_alerta_parametro_leitura`,
     );
@@ -48,7 +48,7 @@ export class EvoluiAlertaParaIncidente1792900000002 implements MigrationInterfac
     await queryRunner.query(
       `ALTER TABLE app.alerta ADD CONSTRAINT ck_alerta_motivo_encerramento CHECK (motivo_encerramento IN ('NORMALIZADO', 'EXPIRADO', 'MANUAL', 'INVALIDADO'))`,
     );
-    // RN-013: a single active alert per variable and territory.
+    // RN-013: um único alerta ativo por variável e território.
     await queryRunner.query(
       `CREATE UNIQUE INDEX uq_alerta_ativo_variavel_territorio ON app.alerta (variavel, territorio) WHERE status = 'ATIVO'`,
     );

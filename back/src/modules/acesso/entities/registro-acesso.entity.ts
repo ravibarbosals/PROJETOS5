@@ -8,7 +8,8 @@ import {
 } from 'typeorm';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 
-// Insert-only login log (RN-011, DEC-014). The password is never stored here.
+// Registro de login, só inserção (RN-011, DEC-014). A senha nunca é gravada
+// aqui.
 @Entity({ name: 'registro_acesso' })
 export class RegistroAcesso {
   @PrimaryGeneratedColumn({ name: 'id' })

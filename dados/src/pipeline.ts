@@ -9,7 +9,7 @@ const UPSERT = `
   ON CONFLICT (fonte, estacao, variavel, lida_em)
   DO UPDATE SET valor = EXCLUDED.valor, atualizado_em = now()`;
 
-// Calls the API and stores the raw response. Returns false if the source failed.
+// Chama a API e grava a resposta bruta. Devolve false se a fonte falhou.
 export async function coletar(pool: pg.Pool): Promise<boolean> {
   const coleta = await coletarOpenMeteo();
   const { rows } = await pool.query<{ id: string }>(
@@ -29,7 +29,8 @@ export async function coletar(pool: pg.Pool): Promise<boolean> {
   return coleta.statusHttp === 200;
 }
 
-// Moves pending collections from bronze to gold. Returns false if any failed.
+// Move as coletas pendentes do bronze para o gold. Devolve false se alguma
+// falhou.
 export async function tratar(pool: pg.Pool): Promise<boolean> {
   const { rows: coletas } = await pool.query<{
     id: string;

@@ -11,7 +11,8 @@ export interface FieldError {
 
 export const VALIDATION_MESSAGE = 'Dados inválidos';
 
-// Nested DTO errors become dotted paths: endereco.cep, itens.0.quantidade.
+// Erros de DTO aninhado viram caminhos com ponto: endereco.cep,
+// itens.0.quantidade.
 export function flattenValidationErrors(
   errors: ValidationError[],
   parent?: string,
@@ -25,7 +26,8 @@ export function flattenValidationErrors(
   });
 }
 
-// One pipe, one status: invalid body, query or param and unknown fields are all 422 (DEC-010).
+// Um pipe, um status: corpo, query ou parâmetro inválido e campo desconhecido
+// dão todos 422 (DEC-010).
 export function createValidationPipe() {
   return new ValidationPipe({
     transform: true,

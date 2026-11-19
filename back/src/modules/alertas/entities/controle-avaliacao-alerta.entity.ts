@@ -1,12 +1,13 @@
 import { BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-// Single row with the alert job marker (DEC-015). Created by the migration.
+// Linha única com o marcador do job de alertas (DEC-015). Criada pela migração.
 @Entity({ name: 'controle_avaliacao_alerta' })
 export class ControleAvaliacaoAlerta {
   @PrimaryGeneratedColumn({ name: 'id' })
   id!: number;
 
-  // Null means the job never ran. Only advances after the alerts are saved.
+  // Nulo significa que o job nunca rodou. Só avança depois que os alertas são
+  // gravados.
   @Column({
     name: 'ultima_lida_em',
     type: 'timestamptz',

@@ -20,7 +20,8 @@ import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastre
 
 @Module({
   imports: [
-    // DOTENV_CONFIG_PATH picks another file (.env.neon), as the TypeORM CLI does.
+    // DOTENV_CONFIG_PATH escolhe outro arquivo (.env.neon), como faz a CLI do
+    // TypeORM.
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
@@ -37,7 +38,8 @@ import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastre
   controllers: [AppController],
   providers: [
     AppService,
-    // Registered as providers (not in main.ts) so e2e tests get the same behavior.
+    // Registrados como providers (e não no main.ts) para os e2e terem o mesmo
+    // comportamento.
     { provide: APP_PIPE, useFactory: createValidationPipe },
     {
       provide: APP_FILTER,

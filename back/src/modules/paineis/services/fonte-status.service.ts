@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { FonteStatusResponseDto } from '@/modules/paineis/dto/fonte-status-response.dto';
 
-// REQ-019: last successful collection of each source (view in the gold schema).
+// REQ-019: última coleta bem-sucedida de cada fonte (view no schema gold).
 @Injectable()
 export class FonteStatusService {
   constructor(private readonly dataSource: DataSource) {}
@@ -13,7 +13,7 @@ export class FonteStatusService {
     );
   }
 
-  // RN-007: sources without a successful collection are absent, never "now".
+  // RN-007: fontes sem coleta bem-sucedida ficam de fora, nunca "agora".
   async ultimaAtualizacaoPorFonte(): Promise<Map<string, Date>> {
     const status = await this.listar();
     return new Map(status.map((s) => [s.fonte, s.ultima_atualizacao]));

@@ -27,19 +27,19 @@ import {
   ParametroAlertaService,
 } from '@/modules/alertas/services/parametro-alerta.service';
 
-// Invalid :id is 422 like any other invalid input (DEC-010).
+// :id inválido dá 422, como qualquer outra entrada inválida (DEC-010).
 const IdPipe = new ParseIntPipe({
   errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
 });
 
-// No DELETE: parameters are only deactivated (DEC-014).
+// Sem DELETE: parâmetros são só inativados (DEC-014).
 @ApiTags('parametros-alerta')
 @ApiBearerAuth()
 @Controller('parametros-alerta')
 export class ParametroAlertaController {
   constructor(private readonly parametros: ParametroAlertaService) {}
 
-  // PER-004: the technician only reads (PR-008).
+  // PER-004: o técnico só consulta (PR-008).
   @Get()
   @Papeis(Papel.Tecnico, Papel.Gestor)
   @ApiPaginationQuery(PARAMETRO_ALERTA_PAGINATE_CONFIG)
@@ -81,7 +81,7 @@ export class ParametroAlertaController {
     );
   }
 
-  // PER-005. Includes deactivation (ativo: false).
+  // PER-005. Inclui a inativação (ativo: false).
   @Patch(':id')
   @Papeis(Papel.Gestor)
   @ApiNotFoundResponse({ description: 'Parâmetro não encontrado' })

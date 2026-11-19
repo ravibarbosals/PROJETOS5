@@ -1,6 +1,6 @@
 import { VariavelClimatica } from '@/modules/paineis/enums/variavel-climatica.enum';
 
-// MOD-005 contract (DEC-011).
+// Contrato do MOD-005 (DEC-011).
 export class LeituraResponseDto {
   fonte!: string;
   estacao!: string;

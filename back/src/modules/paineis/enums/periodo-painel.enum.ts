@@ -1,4 +1,4 @@
-// Panel periods (PR-018).
+// Períodos dos painéis (PR-018).
 export enum PeriodoPainel {
   Ultimas24Horas = '24h',
   Ultimos7Dias = '7d',

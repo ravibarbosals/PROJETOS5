@@ -8,7 +8,7 @@ const DURACAO_MS: Record<PeriodoPainel, number> = {
   [PeriodoPainel.Ultimos30Dias]: 30 * 24 * HORA_MS,
 };
 
-// Start of the window that ends now (PR-018).
+// Início da janela que termina agora (PR-018).
 export function inicioDaJanela(periodo: PeriodoPainel, agora: Date): Date {
   return new Date(agora.getTime() - DURACAO_MS[periodo]);
 }

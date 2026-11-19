@@ -3,7 +3,7 @@ import { SecaoBoletim } from '@/modules/boletins/enums/secao-boletim.enum';
 
 const SECAO_INVALIDA = 'Escolha ao menos uma seção válida';
 
-// RN-009 #2 and #3. Repeated sections are accepted once (PR-022 d).
+// RN-009 #2 e #3. Seções repetidas são aceitas uma vez só (PR-022 d).
 export class GerarBoletimDto {
   /** Seções do boletim, em qualquer ordem */
   @IsArray({ message: SECAO_INVALIDA })

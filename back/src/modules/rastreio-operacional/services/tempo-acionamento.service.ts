@@ -23,7 +23,8 @@ export interface AlertaComPrimeiraAcao {
 const paraSegundos = (ms: number | null) =>
   ms === null ? null : Math.round(ms / 1000);
 
-// Pure mapping from the query rows to the API shape (RN-006, PR-021).
+// Mapeamento puro das linhas da consulta para o formato da API (RN-006,
+// PR-021).
 export function montarTempoAcionamento(
   periodo: PeriodoQueryDto,
   linhas: AlertaComPrimeiraAcao[],
@@ -60,8 +61,8 @@ export class TempoAcionamentoService {
     @InjectRepository(Alerta) private readonly alertas: Repository<Alerta>,
   ) {}
 
-  // Alerts triggered in the period (inclusive) with their first linked action.
-  // One grouped query instead of one query per alert.
+  // Alertas disparados no período (inclusive) com a primeira ação ligada. Uma
+  // consulta agrupada em vez de uma consulta por alerta.
   async calcular(
     periodo: PeriodoQueryDto,
   ): Promise<TempoAcionamentoResponseDto> {

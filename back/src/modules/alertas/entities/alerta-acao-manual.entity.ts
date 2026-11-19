@@ -10,8 +10,8 @@ import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { TipoAcaoManual } from '@/modules/alertas/enums/tipo-acao-manual.enum';
 
-// RN-015 #8: who closed, invalidated or extended an alert, why and when.
-// Insert-only (DEC-014).
+// RN-015 #8: quem encerrou, invalidou ou prorrogou um alerta, por quê e quando.
+// Só inserção (DEC-014).
 @Entity({ name: 'alerta_acao_manual' })
 export class AlertaAcaoManual {
   @PrimaryGeneratedColumn({ name: 'id' })
@@ -29,7 +29,7 @@ export class AlertaAcaoManual {
   @Column({ name: 'motivo', type: 'varchar', length: 2000 })
   motivo!: string;
 
-  // Only for PRORROGAR (RN-015 #6).
+  // Só para PRORROGAR (RN-015 #6).
   @Column({
     name: 'prorrogado_ate',
     type: 'timestamptz',
@@ -38,7 +38,7 @@ export class AlertaAcaoManual {
   })
   prorrogadoAte!: Date | null;
 
-  // Server time (RN-015 #8).
+  // Hora do servidor (RN-015 #8).
   @CreateDateColumn({ name: 'dthr_criacao', type: 'timestamptz', precision: 3 })
   dthrCriacao!: Date;
 

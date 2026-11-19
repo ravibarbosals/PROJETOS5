@@ -14,7 +14,7 @@ import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
-// decimal(12,3) in the database (erd.md).
+// decimal(12,3) no banco (erd.md).
 const LIMIAR_MAX = 999_999_999.999;
 
 // ck_parametro_alerta_janela_horas.

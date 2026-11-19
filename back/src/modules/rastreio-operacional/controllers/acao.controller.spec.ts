@@ -44,7 +44,8 @@ function acao(id: number, idAlerta: number | null): Acao {
   });
 }
 
-// PER-007, PER-008 and the MOD-003 contract, with the real guard, pipe and filter.
+// PER-007, PER-008 e o contrato do MOD-003, com o guard, o pipe e o filtro
+// reais.
 describe('AcaoController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

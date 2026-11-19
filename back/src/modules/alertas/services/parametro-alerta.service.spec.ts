@@ -164,7 +164,7 @@ describe('ParametroAlertaService (RN-001)', () => {
     expect(erro.getStatus()).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
     expect(erro.businessRuleCode).toBe('LIMIAR_SAIDA_INVALIDO');
 
-    // Only one threshold changes, but the pair becomes invalid (20 >= 15).
+    // Só um limiar muda, mas o par fica inválido (20 >= 15).
     await expect(service.alterar(3, { limiar: 15 }, GESTOR)).rejects.toThrow(
       BusinessRuleException,
     );

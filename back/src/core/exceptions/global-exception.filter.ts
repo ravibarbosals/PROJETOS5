@@ -22,7 +22,7 @@ export interface ErrorResponse {
 
 const INTERNAL_ERROR_MESSAGE = 'Erro interno do servidor';
 
-// Single error contract for the whole API (DEC-010, DEC-011).
+// Contrato único de erro para toda a API (DEC-010, DEC-011).
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);

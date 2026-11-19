@@ -6,9 +6,9 @@ export interface BusinessRule {
   status?: HttpStatus;
 }
 
-// Violation of a documented business rule (DEC-010): 412 by default, or the
-// status the rule defines (e.g. 409 for uniqueness). The code goes to the
-// client as business_rule_code.
+// Violação de uma regra de negócio documentada (DEC-010): 412 por padrão, ou o
+// status que a regra define (ex.: 409 para unicidade). O código vai para o
+// cliente como business_rule_code.
 export class BusinessRuleException extends HttpException {
   readonly businessRuleCode: string;
 
@@ -18,8 +18,9 @@ export class BusinessRuleException extends HttpException {
   }
 }
 
-// Each module declares its rules with this helper, so codes stay unique per catalog
-// and the key is the code itself (no loose strings in services).
+// Cada módulo declara as suas regras com este helper, para os códigos serem
+// únicos por catálogo e a chave ser o próprio código (nada de strings soltas
+// nos services).
 export function defineBusinessRules<K extends string>(
   rules: Record<K, Omit<BusinessRule, 'code'>>,
 ): Record<K, BusinessRule> {

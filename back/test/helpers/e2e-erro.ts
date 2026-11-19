@@ -7,7 +7,7 @@ interface ErroEsperado {
   businessRuleCode?: string;
 }
 
-// Every error follows the same contract (DEC-010, DEC-011).
+// Todo erro segue o mesmo contrato (DEC-010, DEC-011).
 export function esperarErro(res: Response, esperado: ErroEsperado) {
   const corpo = res.body as ErrorResponse;
 
@@ -25,7 +25,7 @@ export function esperarErro(res: Response, esperado: ErroEsperado) {
   }
 }
 
-// 422 with the detail of the invalid fields (DEC-010).
+// 422 com o detalhe dos campos inválidos (DEC-010).
 export function camposInvalidos(res: Response): string[] {
   esperarErro(res, { status: 422, message: 'Dados inválidos' });
   const { errors } = res.body as { errors: { property: string }[] };

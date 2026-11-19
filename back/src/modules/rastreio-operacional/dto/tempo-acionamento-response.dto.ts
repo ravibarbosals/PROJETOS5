@@ -10,7 +10,7 @@ export class TempoAcionamentoAlertaDto {
   tempo_segundos!: number | null;
 }
 
-// RN-006 / REQ-018 (EST-03). Times in whole seconds.
+// RN-006 / REQ-018 (EST-03). Tempos em segundos inteiros.
 export class TempoAcionamentoResponseDto {
   inicio!: Date;
   fim!: Date;

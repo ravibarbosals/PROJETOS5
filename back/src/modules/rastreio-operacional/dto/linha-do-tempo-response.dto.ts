@@ -25,7 +25,8 @@ export class AlertaResumoDto {
   }
 }
 
-// One timeline entry: `alerta` when tipo = ALERTA, `acao` when tipo = ACAO.
+// Uma entrada da linha do tempo: `alerta` quando tipo = ALERTA, `acao` quando
+// tipo = ACAO.
 export class ItemLinhaDoTempoDto {
   tipo!: 'ALERTA' | 'ACAO';
   /** Disparo do alerta ou registro da ação */

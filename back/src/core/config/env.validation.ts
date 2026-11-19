@@ -25,17 +25,18 @@ export class EnvironmentVariables {
   @Max(65535)
   PORT: number = 3000;
 
-  // postgresql://user:password@host:5432/database (DEC-024). On Neon, end
-  // with ?sslmode=verify-full.
+  // postgresql://usuario:senha@host:5432/banco (DEC-024). No Neon, termina com
+  // ?sslmode=verify-full.
   @Matches(/^postgres(ql)?:\/\/.+/)
   DATABASE_URL!: string;
 
-  // DEC-013. At least 32 characters so a weak secret never reaches production.
+  // DEC-013. No mínimo 32 caracteres, para um segredo fraco nunca chegar à
+  // produção.
   @IsString()
   @MinLength(32)
   JWT_SECRET!: string;
 
-  // Format accepted by jsonwebtoken: number + s/m/h/d (e.g. 8h).
+  // Formato aceito pelo jsonwebtoken: número + s/m/h/d (ex.: 8h).
   @Matches(/^\d+[smhd]$/)
   JWT_EXPIRES_IN: `${number}${'s' | 'm' | 'h' | 'd'}` = '8h';
 }

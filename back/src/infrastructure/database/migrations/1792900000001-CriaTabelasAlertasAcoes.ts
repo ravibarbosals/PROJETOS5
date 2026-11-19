@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 // erd.md: parametro_alerta, parametro_alerta_historico, alerta (MOD-002), acao
-// (MOD-003) and controle_avaliacao_alerta (DEC-015). Schema `app` (DEC-016).
+// (MOD-003) e controle_avaliacao_alerta (DEC-015). Schema `app` (DEC-016).
 export class CriaTabelasAlertasAcoes1792900000001 implements MigrationInterface {
   name = 'CriaTabelasAlertasAcoes1792900000001';
 
@@ -110,7 +110,7 @@ export class CriaTabelasAlertasAcoes1792900000001 implements MigrationInterface 
         CONSTRAINT pk_controle_avaliacao_alerta PRIMARY KEY (id)
       )
     `);
-    // Single row; null marker means the job never ran (DEC-015).
+    // Linha única; marcador nulo significa que o job nunca rodou (DEC-015).
     await queryRunner.query(
       `INSERT INTO app.controle_avaliacao_alerta (ultima_lida_em) VALUES (NULL)`,
     );

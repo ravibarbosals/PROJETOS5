@@ -10,7 +10,8 @@ import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 
-// Insert-only change log of a parameter (RN-001: who, when, before -> after).
+// Registro de alterações de um parâmetro, só inserção (RN-001: quem, quando,
+// antes -> depois).
 @Entity({ name: 'parametro_alerta_historico' })
 export class ParametroAlertaHistorico {
   @PrimaryGeneratedColumn({ name: 'id' })
@@ -25,7 +26,7 @@ export class ParametroAlertaHistorico {
   @Column({ name: 'operacao', type: 'varchar', length: 12 })
   operacao!: OperacaoHistorico;
 
-  // Null on creation.
+  // Nulo na criação.
   @Column({ name: 'valor_anterior', type: 'jsonb', nullable: true })
   valorAnterior!: Record<string, unknown> | null;
 

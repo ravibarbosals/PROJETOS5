@@ -21,7 +21,7 @@ export interface ArquivoPdf {
   conteudo: Buffer;
 }
 
-// RN-009. Gold sections (meteorologia, rios) arrive with TASK-032.
+// RN-009. As seções do gold (meteorologia, rios) chegam com a TASK-032.
 @Injectable()
 export class BoletimService {
   constructor(
@@ -45,7 +45,7 @@ export class BoletimService {
     return renderizarHtml(await this.montar(secoes, agora));
   }
 
-  // RN-009 #4: same document as the preview.
+  // RN-009 #4: mesmo documento da pré-visualização.
   async gerarPdf(
     secoes: readonly SecaoBoletim[],
     agora = new Date(),
@@ -57,7 +57,7 @@ export class BoletimService {
     };
   }
 
-  // PR-022 b: actions registered in the last 24 h, newest first.
+  // PR-022 b: ações registradas nas últimas 24 h, mais recentes primeiro.
   private async acoesEmCurso(agora: Date): Promise<AcaoBoletim[]> {
     const acoes = await this.acoes.find({
       where: {

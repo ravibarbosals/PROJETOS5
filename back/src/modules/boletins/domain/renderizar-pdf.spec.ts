@@ -53,7 +53,7 @@ describe('definicaoPdf (RN-009 #4, DEC-019)', () => {
 describe('nomeDoArquivo', () => {
   it('uses the date in Recife', () => {
     expect(nomeDoArquivo(GERADO_EM)).toBe('boletim-2026-11-02.pdf');
-    // 01:30 UTC is still the previous day in Recife (UTC-3).
+    // 01:30 UTC ainda é o dia anterior no Recife (UTC-3).
     expect(nomeDoArquivo(new Date('2026-11-02T01:30:00Z'))).toBe(
       'boletim-2026-11-01.pdf',
     );

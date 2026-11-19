@@ -1,5 +1,5 @@
-// Entry point for the TypeORM CLI (npm run migration:*). The app itself uses
-// DatabaseModule; both share buildDatabaseOptions.
+// Ponto de entrada da CLI do TypeORM (npm run migration:*). A aplicação usa o
+// DatabaseModule; os dois compartilham o buildDatabaseOptions.
 import 'dotenv/config';
 import 'reflect-metadata';
 import { join } from 'node:path';

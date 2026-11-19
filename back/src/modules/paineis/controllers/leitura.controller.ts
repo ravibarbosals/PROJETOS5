@@ -10,7 +10,7 @@ import { LeituraService } from '@/modules/paineis/services/leitura.service';
 export class LeituraController {
   constructor(private readonly leituras: LeituraService) {}
 
-  // PER-010: every logged-in role, so no @Papeis.
+  // PER-010: todo papel logado, por isso sem @Papeis.
   @Get()
   listar(@Query() filtros: LeiturasQueryDto): Promise<LeituraResponseDto[]> {
     return this.leituras.listar(filtros);

@@ -32,7 +32,7 @@ const USUARIOS: Record<number, Usuario> = {
 const URL =
   '/linha-do-tempo?inicio=2026-11-02T00:00:00Z&fim=2026-11-02T23:59:59Z';
 
-// PER-008 and the period validation, with the real guard, pipe and filter.
+// PER-008 e a validação do período, com o guard, o pipe e o filtro reais.
 describe('LinhaDoTempoController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};

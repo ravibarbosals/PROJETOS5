@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 
-// Password hashing (DEC-013). Wrapped so services can be tested without argon2.
+// Hash de senha (DEC-013). Encapsulado para os services poderem ser testados
+// sem o argon2.
 @Injectable()
 export class PasswordHasher {
   hash(senha: string): Promise<string> {

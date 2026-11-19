@@ -6,7 +6,7 @@ export interface RequestAutenticada extends Request {
   usuario?: Usuario;
 }
 
-// The user loaded by AuthGuard for the current request.
+// O usuário carregado pelo AuthGuard na requisição atual.
 export const UsuarioAtual = createParamDecorator(
   (_: unknown, context: ExecutionContext): Usuario => {
     const request = context.switchToHttp().getRequest<RequestAutenticada>();

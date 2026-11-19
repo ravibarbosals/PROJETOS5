@@ -10,7 +10,7 @@ export interface Leitura {
   lidaEm: Date;
 }
 
-// Open-Meteo field -> variable name used in gold
+// Campo do Open-Meteo -> nome da variável usado no gold
 const VARIAVEIS: Record<string, Variavel> = {
   precipitation: 'precipitacao_mm',
   temperature_2m: 'temperatura_c',
@@ -40,12 +40,12 @@ export function extrairLeituras(payload: unknown, coletadoEm: Date): Leitura[] {
     }
     horas.forEach((hora, i) => {
       const valor: unknown = valores[i];
-      // The API returns UTC times without the zone suffix
+      // A API devolve horários em UTC sem o sufixo de fuso
       const lidaEm = new Date(`${String(hora)}Z`);
       if (typeof valor !== 'number' || Number.isNaN(lidaEm.getTime())) {
         return;
       }
-      // Hours after the collection are forecast, not readings
+      // Horas depois da coleta são previsão, não leitura
       if (lidaEm > coletadoEm) {
         return;
       }

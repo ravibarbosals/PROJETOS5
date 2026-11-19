@@ -5,7 +5,7 @@ import { DataSource } from 'typeorm';
 import { buildDatabaseOptions } from '../src/infrastructure/database/database.options';
 import { aplicarAmbienteE2e } from './e2e-ambiente';
 
-// Relative imports only: globalSetup does not go through moduleNameMapper.
+// Só imports relativos: o globalSetup não passa pelo moduleNameMapper.
 function conexao(database: string): DataSource {
   const url = new URL(process.env.DATABASE_URL ?? '');
   url.pathname = `/${database}`;
@@ -24,19 +24,19 @@ async function executar(database: string, sql: string): Promise<unknown[]> {
   }
 }
 
-// Requires the PostgreSQL of compose.yml (docker compose up -d --wait).
-// Recreates the e2e database (always "<db>_e2e", see e2e-ambiente.ts), the app
-// schema (what db-init does for the development database) and the pipeline
-// schemas, then applies every migration from scratch with the same CLI as
-// production (DEC-008), so the e2e also prove them and no run inherits the
-// data of the previous one.
+// Precisa do PostgreSQL do compose.yml (docker compose up -d --wait). Recria o
+// banco de e2e (sempre "<banco>_e2e", ver e2e-ambiente.ts), o schema app (o que
+// o db-init faz no banco de desenvolvimento) e os schemas da pipeline, depois
+// aplica todas as migrações do zero com a mesma CLI da produção (DEC-008).
+// Assim os e2e também provam as migrações e nenhuma execução herda os dados da
+// anterior.
 export default async function globalSetup() {
   const banco = aplicarAmbienteE2e();
 
   await executar('postgres', `DROP DATABASE IF EXISTS ${banco} WITH (FORCE)`);
   await executar('postgres', `CREATE DATABASE ${banco}`);
   await executar(banco, 'CREATE SCHEMA IF NOT EXISTS app');
-  // Gold of the pipeline (read by MOD-005), from the same SQL used on Neon.
+  // Gold da pipeline (lido pelo MOD-005), com o mesmo SQL usado no Neon.
   await executar(
     banco,
     readFileSync(
