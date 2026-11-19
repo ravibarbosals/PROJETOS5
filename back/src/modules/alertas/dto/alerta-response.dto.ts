@@ -1,4 +1,5 @@
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
+import { MotivoEncerramento } from '@/modules/alertas/enums/motivo-encerramento.enum';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 
 class ParametroResumoDto {
@@ -21,6 +22,11 @@ export class AlertaResponseDto {
   /** Última coleta bem-sucedida da fonte (RN-007); nula se a fonte nunca foi coletada */
   fonte_atualizada_em!: Date | null;
   status!: StatusAlerta;
+  /** Até quando o job não encerra o alerta sozinho (RN-015 #6) */
+  prorrogado_ate!: Date | null;
+  encerrado_em!: Date | null;
+  /** RN-015; nulo enquanto ativo */
+  motivo_encerramento!: MotivoEncerramento | null;
 
   static from(
     alerta: Alerta,
@@ -42,6 +48,9 @@ export class AlertaResponseDto {
       // RN-007 #2: nunca a hora atual quando a data da fonte é desconhecida.
       fonte_atualizada_em: fonteAtualizadaEm,
       status: alerta.status,
+      prorrogado_ate: alerta.prorrogadoAte,
+      encerrado_em: alerta.dthrEncerramento,
+      motivo_encerramento: alerta.motivoEncerramento,
     };
   }
 }

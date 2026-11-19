@@ -78,6 +78,7 @@ describe('TempoAcionamentoService', () => {
       select: jest.fn().mockReturnThis(),
       addSelect: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
       groupBy: jest.fn().mockReturnThis(),
       addGroupBy: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
@@ -97,6 +98,11 @@ describe('TempoAcionamentoService', () => {
     expect(qb.where).toHaveBeenCalledWith(
       'alerta.dthr_disparo BETWEEN :inicio AND :fim',
       PERIODO,
+    );
+    // RN-015 #5: falso positivo não entra no indicador.
+    expect(qb.andWhere).toHaveBeenCalledWith(
+      'alerta.motivo_encerramento IS DISTINCT FROM :invalidado',
+      { invalidado: 'INVALIDADO' },
     );
     expect(qb.addSelect).toHaveBeenCalledWith(
       'MIN(acao.dthr_criacao)',

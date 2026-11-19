@@ -1,5 +1,7 @@
 import request from 'supertest';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
+import { MotivoEncerramento } from '@/modules/alertas/enums/motivo-encerramento.enum';
+import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 import { criarAlerta, registrarAcaoEm } from './helpers/e2e-alertas';
 import { type AppE2e, criarAppE2e, limparBanco } from './helpers/e2e-app';
 import { esperarErro } from './helpers/e2e-erro';
@@ -128,6 +130,24 @@ describe('Tempo de acionamento (e2e)', () => {
       alertas_sem_acao: 0,
       alertas: [],
     });
+  });
+
+  it('leaves invalidated alerts out, but counts the ones closed by hand (RN-015 #4, #5)', async () => {
+    const manual = await criarAlerta(app, {
+      disparadoEm: em('10:00'),
+      status: StatusAlerta.Encerrado,
+      motivoEncerramento: MotivoEncerramento.Manual,
+    });
+    await criarAlerta(app, {
+      disparadoEm: em('11:00'),
+      status: StatusAlerta.Encerrado,
+      motivoEncerramento: MotivoEncerramento.Invalidado,
+    });
+
+    const res = await consultar().expect(200);
+    const corpo = res.body as { alertas: { id: number }[] };
+
+    expect(corpo.alertas.map((a) => a.id)).toEqual([manual.id]);
   });
 
   it.each([Papel.Gestor, Papel.Tecnico, Papel.Comunicacao])(

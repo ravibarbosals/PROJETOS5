@@ -14,6 +14,7 @@ import { UsuarioService } from '@/modules/acesso/services/usuario.service';
 import { AlertaController } from '@/modules/alertas/controllers/alerta.controller';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
+import { TipoAcaoManual } from '@/modules/alertas/enums/tipo-acao-manual.enum';
 import { AlertaService } from '@/modules/alertas/services/alerta.service';
 import { FonteStatusService } from '@/modules/paineis/services/fonte-status.service';
 
@@ -51,13 +52,17 @@ const ALERTA = Object.assign(new Alerta(), {
   status: StatusAlerta.Ativo,
   dthrDisparo: new Date('2026-10-24T10:05:00Z'),
   dthrEncerramento: null,
+  motivoEncerramento: null,
+  prorrogadoAte: null,
 });
+
+const MOTIVO = 'Chuva parou, confirmado em campo';
 
 // PER-006 e o contrato do MOD-002, com o guard, o pipe e o filtro reais.
 describe('AlertaController', () => {
   let app: INestApplication<App>;
   const tokens: Record<number, string> = {};
-  const service = { listar: jest.fn() };
+  const service = { listar: jest.fn(), agir: jest.fn() };
   const fontes = { ultimaAtualizacaoPorFonte: jest.fn() };
 
   beforeAll(async () => {
@@ -97,6 +102,8 @@ describe('AlertaController', () => {
       meta: { itemsPerPage: 20, totalItems: 1, currentPage: 1, totalPages: 1 },
       links: { current: '/alertas?page=1' },
     });
+    service.agir.mockReset();
+    service.agir.mockResolvedValue(ALERTA);
     fontes.ultimaAtualizacaoPorFonte.mockReset();
     fontes.ultimaAtualizacaoPorFonte.mockResolvedValue(new Map());
   });
@@ -143,6 +150,9 @@ describe('AlertaController', () => {
         disparado_em: '2026-10-24T10:05:00.000Z',
         fonte_atualizada_em: '2026-10-24T10:30:00.000Z',
         status: 'ATIVO',
+        prorrogado_ate: null,
+        encerrado_em: null,
+        motivo_encerramento: null,
       },
     ]);
   });
@@ -154,5 +164,86 @@ describe('AlertaController', () => {
       response.body as { data: { fonte_atualizada_em: unknown }[] }
     ).data;
     expect(alerta.fonte_atualizada_em).toBeNull();
+  });
+
+  // Só prorrogar aceita o prazo: campo a mais dá 422 (DEC-010).
+  const corpo = (acao: string) =>
+    acao === 'prorrogar' ? { motivo: MOTIVO, horas: 2 } : { motivo: MOTIVO };
+
+  const post = (id: number, acao: string, body: object) =>
+    request(app.getHttpServer())
+      .post(`/alertas/10/${acao}`)
+      .set('Authorization', `Bearer ${tokens[id]}`)
+      .send(body);
+
+  describe('manual actions (RN-015)', () => {
+    it.each([
+      [1, 'encerrar'],
+      [2, 'encerrar'],
+      [5, 'encerrar'],
+      [1, 'prorrogar'],
+      [2, 'prorrogar'],
+      [5, 'prorrogar'],
+      [2, 'invalidar'],
+      [5, 'invalidar'],
+    ])('user %i may %s (PER-014, PER-015)', async (id, acao) => {
+      await post(id, acao, corpo(acao)).expect(200);
+    });
+
+    it.each([
+      [3, 'encerrar'],
+      [4, 'encerrar'],
+      [3, 'prorrogar'],
+      [4, 'prorrogar'],
+      [1, 'invalidar'],
+      [3, 'invalidar'],
+      [4, 'invalidar'],
+    ])('user %i may not %s (PER-014, PER-015)', async (id, acao) => {
+      await post(id, acao, corpo(acao)).expect(403);
+      expect(service.agir).not.toHaveBeenCalled();
+    });
+
+    it('passes the action, the trimmed reason and the logged user', async () => {
+      await post(2, 'prorrogar', { motivo: `  ${MOTIVO}  `, horas: 3 }).expect(
+        200,
+      );
+
+      expect(service.agir).toHaveBeenCalledWith(
+        10,
+        { tipo: TipoAcaoManual.Prorrogar, motivo: MOTIVO, horas: 3 },
+        USUARIOS[2],
+      );
+    });
+
+    it('answers the alert in the MOD-002 format', async () => {
+      const response = await post(2, 'encerrar', { motivo: MOTIVO }).expect(
+        200,
+      );
+
+      expect(response.body).toMatchObject({ id: 10, status: 'ATIVO' });
+    });
+
+    it.each([
+      ['encerrar', {}],
+      ['encerrar', { motivo: 'curto' }],
+      ['encerrar', { motivo: '   nove 9   ' }],
+      ['invalidar', { motivo: 123456789012 }],
+      ['prorrogar', { motivo: MOTIVO }],
+      ['prorrogar', { motivo: MOTIVO, horas: 0 }],
+      ['prorrogar', { motivo: MOTIVO, horas: 25 }],
+      ['prorrogar', { motivo: MOTIVO, horas: 1.5 }],
+      ['encerrar', { motivo: MOTIVO, horas: 2 }],
+    ])('answers 422 to %s with %j (RN-015 #6, #8)', async (acao, body) => {
+      await post(2, acao, body).expect(422);
+      expect(service.agir).not.toHaveBeenCalled();
+    });
+
+    it('answers 422 to an invalid id', async () => {
+      await request(app.getHttpServer())
+        .post('/alertas/abc/encerrar')
+        .set('Authorization', `Bearer ${tokens[2]}`)
+        .send({ motivo: MOTIVO })
+        .expect(422);
+    });
   });
 });

@@ -22,6 +22,7 @@ export async function criarAppE2e(): Promise<AppE2e> {
 // criada pela migração.
 const TABELAS = [
   'acao',
+  'alerta_acao_manual',
   'alerta',
   'parametro_alerta_historico',
   'parametro_alerta',

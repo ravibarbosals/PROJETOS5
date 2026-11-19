@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import type { PeriodoQueryDto } from '@/core/dto/periodo-query.dto';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
+import { MotivoEncerramento } from '@/modules/alertas/enums/motivo-encerramento.enum';
 import {
   calcularTempoAcionamento,
   tempoAcionamentoMs,
@@ -62,7 +63,8 @@ export class TempoAcionamentoService {
   ) {}
 
   // Alertas disparados no período (inclusive) com a primeira ação ligada. Uma
-  // consulta agrupada em vez de uma consulta por alerta.
+  // consulta agrupada em vez de uma consulta por alerta. Alerta invalidado
+  // (falso positivo) não conta (RN-015 #5).
   async calcular(
     periodo: PeriodoQueryDto,
   ): Promise<TempoAcionamentoResponseDto> {
@@ -76,6 +78,9 @@ export class TempoAcionamentoService {
       .addSelect('alerta.dthr_disparo', 'dthr_disparo')
       .addSelect('MIN(acao.dthr_criacao)', 'primeira_acao_em')
       .where('alerta.dthr_disparo BETWEEN :inicio AND :fim', periodo)
+      .andWhere('alerta.motivo_encerramento IS DISTINCT FROM :invalidado', {
+        invalidado: MotivoEncerramento.Invalidado,
+      })
       .groupBy('alerta.id')
       .addGroupBy('alerta.variavel')
       .addGroupBy('alerta.territorio')

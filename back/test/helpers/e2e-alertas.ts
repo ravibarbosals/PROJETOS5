@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
+import { MotivoEncerramento } from '@/modules/alertas/enums/motivo-encerramento.enum';
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 import type { AppE2e } from './e2e-app';
@@ -10,6 +11,7 @@ interface DadosAlerta {
   territorio?: string;
   nivel?: NivelAlerta;
   status?: StatusAlerta;
+  motivoEncerramento?: MotivoEncerramento;
 }
 
 let sequencia = 0;
@@ -46,6 +48,7 @@ export async function criarAlerta(
     lidaEm,
     ultimaLeituraEm: lidaEm,
     status: dados.status ?? StatusAlerta.Ativo,
+    motivoEncerramento: dados.motivoEncerramento ?? null,
     dthrDisparo: dados.disparadoEm,
   });
 }

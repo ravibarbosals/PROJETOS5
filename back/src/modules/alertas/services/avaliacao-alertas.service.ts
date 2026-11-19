@@ -21,8 +21,9 @@ import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 
 const HORA_MS = 60 * 60 * 1000;
 
-// Chave da trava do PostgreSQL: duas instâncias do back nunca avaliam juntas.
-const TRAVA = 'vigia:avaliacao-alertas';
+// Chave da trava do PostgreSQL: duas instâncias do back nunca avaliam juntas, e
+// uma ação manual nunca acontece no meio de uma avaliação (RN-015).
+export const TRAVA_ALERTAS = 'vigia:avaliacao-alertas';
 
 export type ResumoAvaliacao = Record<Decisao['tipo'], number>;
 
@@ -56,7 +57,7 @@ export class AvaliacaoAlertasService {
     return this.dataSource.transaction(async (manager) => {
       const [{ obtida }] = await manager.query<{ obtida: boolean }[]>(
         'SELECT pg_try_advisory_xact_lock(hashtext($1)) AS obtida',
-        [TRAVA],
+        [TRAVA_ALERTAS],
       );
       if (!obtida) return null;
 
