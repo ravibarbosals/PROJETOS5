@@ -12,8 +12,8 @@ import type { PontoDoGrafico } from '@/modules/leituras/resumo'
 
 // Cores pelas variáveis de tema (DEC-028).
 const config = {
-  chuva: { label: 'Chuva (mm)', color: 'var(--chart-1)' },
-  temperatura: { label: 'Temperatura (°C)', color: 'var(--chart-2)' },
+  chuva: { label: 'Chuva (mm):', color: 'var(--chart-1)' },
+  temperatura: { label: 'Temperatura (°C):', color: 'var(--chart-2)' },
 } satisfies ChartConfig
 
 // O eixo da chuva vai no mínimo até 1 mm: garoa de 0,1 mm não pode parecer temporal.

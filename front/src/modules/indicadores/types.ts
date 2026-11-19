@@ -17,3 +17,24 @@ export interface TempoAcionamento {
   alertas_sem_acao: number
   alertas: TempoAcionamentoAlerta[]
 }
+
+// GET /indicadores (MOD-005, DEC-031): casos prováveis por bairro e semana
+// epidemiológica.
+export type Agravo = 'dengue' | 'chikungunya' | 'zika'
+
+export interface IndicadorTerritorio {
+  territorio: string
+  bairro: string
+  indicador: Agravo
+  // Semana epidemiológica: "2025-SE01"
+  periodo: string
+  valor: number
+  fonte: string
+  fonte_atualizada_em: string | null
+}
+
+export interface FiltrosIndicadores {
+  indicador?: Agravo
+  ano?: number
+  bairro?: string
+}
