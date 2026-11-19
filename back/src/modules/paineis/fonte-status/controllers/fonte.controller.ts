@@ -1,0 +1,17 @@
+import { Controller, Get } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FonteStatusResponseDto } from '@/modules/paineis/fonte-status/dto/fonte-status-response.dto';
+import { FonteStatusService } from '@/modules/paineis/fonte-status/services/fonte-status.service';
+
+@ApiTags('paineis')
+@ApiBearerAuth()
+@Controller('fontes')
+export class FonteController {
+  constructor(private readonly fontes: FonteStatusService) {}
+
+  // PER-010: todo papel logado, por isso sem @Papeis.
+  @Get('status')
+  listarStatus(): Promise<FonteStatusResponseDto[]> {
+    return this.fontes.listar();
+  }
+}

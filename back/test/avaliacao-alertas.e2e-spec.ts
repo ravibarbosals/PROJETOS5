@@ -5,7 +5,7 @@ import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.ent
 import { MotivoEncerramento } from '@/modules/alertas/enums/motivo-encerramento.enum';
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
-import { AvaliacaoAlertasService } from '@/modules/alertas/services/avaliacao-alertas.service';
+import { AvaliacaoAlertasService } from '@/modules/alertas/avaliacao/services/avaliacao-alertas.service';
 import { type AppE2e, criarAppE2e, limparBanco } from './helpers/e2e-app';
 import { inserirLeitura, limparGold } from './helpers/e2e-gold';
 

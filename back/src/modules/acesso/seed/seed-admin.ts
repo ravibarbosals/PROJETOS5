@@ -8,12 +8,12 @@ import {
   validateSync,
 } from 'class-validator';
 import type { DataSource } from 'typeorm';
-import { SENHA_MIN } from '@/modules/acesso/dto/criar-usuario.dto';
+import { SENHA_MIN } from '@/modules/acesso/usuario/dto/criar-usuario.dto';
 import { UsuarioPapel } from '@/modules/acesso/entities/usuario-papel.entity';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
 import type { PasswordHasher } from '@/modules/acesso/services/password-hasher.service';
-import { normalizarEmail } from '@/modules/acesso/services/usuario.service';
+import { normalizarEmail } from '@/modules/acesso/usuario/services/usuario.service';
 
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;

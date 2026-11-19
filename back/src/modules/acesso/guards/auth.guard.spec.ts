@@ -16,7 +16,7 @@ import {
   NAO_AUTENTICADO_MESSAGE,
   SEM_PERMISSAO_MESSAGE,
 } from '@/modules/acesso/guards/auth.guard';
-import { UsuarioService } from '@/modules/acesso/services/usuario.service';
+import { UsuarioService } from '@/modules/acesso/usuario/services/usuario.service';
 
 const SECRET = 'x'.repeat(32);
 

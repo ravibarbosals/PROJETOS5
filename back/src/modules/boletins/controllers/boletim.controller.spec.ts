@@ -10,7 +10,7 @@ import { UsuarioPapel } from '@/modules/acesso/entities/usuario-papel.entity';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { AuthGuard } from '@/modules/acesso/guards/auth.guard';
-import { UsuarioService } from '@/modules/acesso/services/usuario.service';
+import { UsuarioService } from '@/modules/acesso/usuario/services/usuario.service';
 import { BoletimController } from '@/modules/boletins/controllers/boletim.controller';
 import { BoletimService } from '@/modules/boletins/services/boletim.service';
 

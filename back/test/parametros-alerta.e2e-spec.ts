@@ -2,7 +2,7 @@ import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
-import { AvaliacaoAlertasService } from '@/modules/alertas/services/avaliacao-alertas.service';
+import { AvaliacaoAlertasService } from '@/modules/alertas/avaliacao/services/avaliacao-alertas.service';
 import { type AppE2e, criarAppE2e, limparBanco } from './helpers/e2e-app';
 import { camposInvalidos, esperarErro } from './helpers/e2e-erro';
 import { inserirLeitura, limparGold } from './helpers/e2e-gold';

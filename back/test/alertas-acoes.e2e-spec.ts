@@ -5,7 +5,7 @@ import { AlertaAcaoManual } from '@/modules/alertas/entities/alerta-acao-manual.
 import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
 import { TipoAcaoManual } from '@/modules/alertas/enums/tipo-acao-manual.enum';
-import { AvaliacaoAlertasService } from '@/modules/alertas/services/avaliacao-alertas.service';
+import { AvaliacaoAlertasService } from '@/modules/alertas/avaliacao/services/avaliacao-alertas.service';
 import { criarAlerta } from './helpers/e2e-alertas';
 import { type AppE2e, criarAppE2e, limparBanco } from './helpers/e2e-app';
 import { esperarErro } from './helpers/e2e-erro';

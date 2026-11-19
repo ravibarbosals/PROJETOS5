@@ -4,15 +4,15 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnvironmentVariables } from '@/core/config/env.validation';
-import { AuthController } from '@/modules/acesso/controllers/auth.controller';
-import { UsuarioController } from '@/modules/acesso/controllers/usuario.controller';
+import { AuthController } from '@/modules/acesso/auth/controllers/auth.controller';
+import { UsuarioController } from '@/modules/acesso/usuario/controllers/usuario.controller';
 import { AuthGuard } from '@/modules/acesso/guards/auth.guard';
 import { RegistroAcesso } from '@/modules/acesso/entities/registro-acesso.entity';
 import { UsuarioPapel } from '@/modules/acesso/entities/usuario-papel.entity';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
-import { AuthService } from '@/modules/acesso/services/auth.service';
+import { AuthService } from '@/modules/acesso/auth/services/auth.service';
 import { PasswordHasher } from '@/modules/acesso/services/password-hasher.service';
-import { UsuarioService } from '@/modules/acesso/services/usuario.service';
+import { UsuarioService } from '@/modules/acesso/usuario/services/usuario.service';
 
 @Module({
   imports: [

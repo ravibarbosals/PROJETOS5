@@ -11,8 +11,8 @@ import { IS_PUBLIC_KEY } from '@/core/auth/public.decorator';
 import { PAPEIS_KEY } from '@/modules/acesso/decorators/papeis.decorator';
 import { RequestAutenticada } from '@/modules/acesso/decorators/usuario-atual.decorator';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
-import { JwtPayload } from '@/modules/acesso/services/auth.service';
-import { UsuarioService } from '@/modules/acesso/services/usuario.service';
+import { JwtPayload } from '@/modules/acesso/auth/services/auth.service';
+import { UsuarioService } from '@/modules/acesso/usuario/services/usuario.service';
 
 export const NAO_AUTENTICADO_MESSAGE = 'Faça login para continuar';
 export const SEM_PERMISSAO_MESSAGE = 'Você não tem permissão para esta ação';
