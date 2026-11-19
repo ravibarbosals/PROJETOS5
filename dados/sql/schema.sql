@@ -34,3 +34,17 @@ SELECT fonte, max(coletado_em) AS ultima_atualizacao
 FROM bronze.coleta
 WHERE status_http = 200
 GROUP BY fonte;
+
+-- Casos prováveis de arbovirose por bairro e semana epidemiológica (DEC-031).
+-- Só contagens: o coletor agrega antes de gravar (REQ-014).
+CREATE TABLE IF NOT EXISTS gold.indicador_territorio (
+  id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  fonte         text        NOT NULL,
+  territorio    text        NOT NULL,
+  bairro        text        NOT NULL,
+  indicador     text        NOT NULL CHECK (indicador IN ('dengue', 'chikungunya', 'zika')),
+  periodo       text        NOT NULL CHECK (periodo ~ '^[0-9]{4}-SE[0-9]{2}$'),
+  valor         integer     NOT NULL CHECK (valor >= 0),
+  atualizado_em timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT indicador_territorio_uk UNIQUE (fonte, indicador, bairro, periodo)
+);
