@@ -3,6 +3,7 @@ import {
   coletarRecurso,
   FONTE as FONTE_ARBOVIROSES,
   listarRecursos,
+  VERSAO_CONTAGEM,
 } from './coletores/arboviroses.js';
 import { coletarOpenMeteo, type Coleta } from './coletores/openmeteo.js';
 import { montarIndicadores } from './tratamentos/arboviroses.js';
@@ -34,7 +35,8 @@ async function gravarColeta(pool: pg.Pool, coleta: Coleta): Promise<boolean> {
 }
 
 // DEC-031: só baixa um recurso quando o portal o republica (a data de
-// modificação muda). Na maioria dos ciclos, só a lista é consultada.
+// modificação muda) ou quando a forma de contar muda (VERSAO_CONTAGEM). Na
+// maioria dos ciclos, só a lista é consultada.
 async function coletarArboviroses(pool: pg.Pool): Promise<boolean> {
   let recursos;
   try {
@@ -49,8 +51,14 @@ async function coletarArboviroses(pool: pg.Pool): Promise<boolean> {
     const { rowCount } = await pool.query(
       `SELECT 1 FROM bronze.coleta
        WHERE fonte = $1 AND status_http = 200
-         AND payload->>'recurso' = $2 AND payload->>'modificado_em' = $3`,
-      [FONTE_ARBOVIROSES, recurso.id, recurso.modificadoEm],
+         AND payload->>'recurso' = $2 AND payload->>'modificado_em' = $3
+         AND payload->>'versao' = $4`,
+      [
+        FONTE_ARBOVIROSES,
+        recurso.id,
+        recurso.modificadoEm,
+        String(VERSAO_CONTAGEM),
+      ],
     );
     if (rowCount) continue;
     ok = (await gravarColeta(pool, await coletarRecurso(recurso))) && ok;

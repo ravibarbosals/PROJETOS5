@@ -48,10 +48,30 @@ describe('contarCasos', () => {
   it('counts probable cases by neighborhood and week, dropping discarded ones', () => {
     const { contagens, descartadas } = contarCasos(
       [
-        { NM_BAIRRO: 'IBURA', SEM_NOT: '202501', CLASSI_FIN: '10' },
-        { NM_BAIRRO: 'IBURA ', SEM_NOT: 202501, CLASSI_FIN: null },
-        { NM_BAIRRO: 'IBURA', SEM_NOT: '202501', CLASSI_FIN: '5' },
-        { NM_BAIRRO: 'COHAB', SEM_NOT: '202502', CLASSI_FIN: '8' },
+        {
+          ID_BAIRRO: 20,
+          NM_BAIRRO: 'IBURA',
+          SEM_NOT: '202501',
+          CLASSI_FIN: '10',
+        },
+        {
+          ID_BAIRRO: 20,
+          NM_BAIRRO: 'IBURA',
+          SEM_NOT: 202501,
+          CLASSI_FIN: null,
+        },
+        {
+          ID_BAIRRO: 20,
+          NM_BAIRRO: 'IBURA',
+          SEM_NOT: '202501',
+          CLASSI_FIN: '5',
+        },
+        {
+          ID_BAIRRO: 88,
+          NM_BAIRRO: 'COHAB',
+          SEM_NOT: '202502',
+          CLASSI_FIN: '8',
+        },
       ],
       'dengue',
     );
@@ -66,8 +86,18 @@ describe('contarCasos', () => {
   it('uses the discard code of each disease (zika is 2)', () => {
     const { contagens } = contarCasos(
       [
-        { NM_BAIRRO: 'IBURA', SEM_NOT: '202501', CLASSI_FIN: '2' },
-        { NM_BAIRRO: 'IBURA', SEM_NOT: '202501', CLASSI_FIN: '5' },
+        {
+          ID_BAIRRO: 20,
+          NM_BAIRRO: 'IBURA',
+          SEM_NOT: '202501',
+          CLASSI_FIN: '2',
+        },
+        {
+          ID_BAIRRO: 20,
+          NM_BAIRRO: 'IBURA',
+          SEM_NOT: '202501',
+          CLASSI_FIN: '5',
+        },
       ],
       'zika',
     );
@@ -77,11 +107,28 @@ describe('contarCasos', () => {
     ]);
   });
 
+  it('keeps a hand-typed name only when it matches a coded one (TASK-063)', () => {
+    const { contagens } = contarCasos(
+      [
+        { ID_BAIRRO: 23, NM_BAIRRO: 'CAMPO GRANDE', SEM_NOT: '202501' },
+        { ID_BAIRRO: '', NM_BAIRRO: ' Campo  Grande ', SEM_NOT: '202501' },
+        { ID_BAIRRO: null, NM_BAIRRO: 'JIQU]', SEM_NOT: '202501' },
+        { ID_BAIRRO: null, NM_BAIRRO: 'VASC', SEM_NOT: '202501' },
+      ],
+      'dengue',
+    );
+
+    assert.deepEqual(contagens, [
+      { bairro: 'CAMPO GRANDE', semana: '202501', casos: 2 },
+      { bairro: 'NAO INFORMADO', semana: '202501', casos: 2 },
+    ]);
+  });
+
   it('reads lowercase column names and groups a blank neighborhood', () => {
     const { contagens, semSemana } = contarCasos(
       [
-        { nm_bairro: '', sem_not: '202301', classi_fin: '10' },
-        { nm_bairro: 'IBURA', sem_not: null, classi_fin: '10' },
+        { id_bairro: null, nm_bairro: '', sem_not: '202301', classi_fin: '10' },
+        { id_bairro: 20, nm_bairro: 'IBURA', sem_not: null, classi_fin: '10' },
       ],
       'dengue',
     );

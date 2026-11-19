@@ -25,6 +25,11 @@ const CONJUNTO = 'casos-de-dengue-zika-e-chikungunya';
 // DEC-031: os 3 anos mais recentes publicados de cada agravo
 export const ANOS = 3;
 
+// Sobe quando a forma de contar muda: coletas de outra versão são baixadas de
+// novo, mesmo que o portal não tenha republicado o arquivo. 2: bairro pelo
+// código da ficha (TASK-063)
+export const VERSAO_CONTAGEM = 2;
+
 // Maior página que a API devolve
 const PAGINA = 500;
 
@@ -38,7 +43,9 @@ const DESCARTADO: Record<Agravo, string> = {
 
 // Só as colunas que a contagem usa: o resto da ficha (nascimento, endereço,
 // CEP) nunca sai da API (REQ-014). Alguns anos vêm com os nomes em minúsculas
-const COLUNAS = ['NM_BAIRRO', 'SEM_NOT', 'CLASSI_FIN'];
+const COLUNAS = ['ID_BAIRRO', 'NM_BAIRRO', 'SEM_NOT', 'CLASSI_FIN'];
+
+export const SEM_BAIRRO = 'NAO INFORMADO';
 
 function isObjeto(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === 'object' && valor !== null && !Array.isArray(valor);
@@ -84,18 +91,46 @@ function campo(linha: Record<string, unknown>, nome: string): string {
   return valor === null || valor === undefined ? '' : String(valor);
 }
 
+// Maiúsculas, sem acento e sem espaço sobrando: "Campo  Grande" = "CAMPO GRANDE"
+function normalizar(texto: string): string {
+  return texto
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
+// TASK-063: com o código do bairro (ID_BAIRRO), o nome vem padronizado. Sem
+// código, o nome foi digitado à mão e às vezes chega truncado ou com acento
+// quebrado ("JIQU]", "VASC"); só vale se for igual a um bairro com código do
+// mesmo arquivo. O resto conta como não informado.
+function resolverBairros(linhas: Record<string, unknown>[]) {
+  const conhecidos = new Set(
+    linhas
+      .filter((l) => campo(l, 'ID_BAIRRO') !== '')
+      .map((l) => normalizar(campo(l, 'NM_BAIRRO')))
+      .filter((nome) => nome !== ''),
+  );
+  return (linha: Record<string, unknown>): string => {
+    const nome = normalizar(campo(linha, 'NM_BAIRRO'));
+    return conhecidos.has(nome) ? nome : SEM_BAIRRO;
+  };
+}
+
 // Conta os casos prováveis por bairro e semana. Recebe as linhas como a API
 // devolve; o que sai daqui é só contagem.
 export function contarCasos(
   linhas: unknown[],
   agravo: Agravo,
 ): { contagens: Contagem[]; descartadas: number; semSemana: number } {
+  const validas = linhas.filter(isObjeto);
+  const bairroDe = resolverBairros(validas);
   const porChave = new Map<string, Contagem>();
   let descartadas = 0;
   let semSemana = 0;
 
-  for (const linha of linhas) {
-    if (!isObjeto(linha)) continue;
+  for (const linha of validas) {
     if (campo(linha, 'CLASSI_FIN') === DESCARTADO[agravo]) {
       descartadas += 1;
       continue;
@@ -105,8 +140,7 @@ export function contarCasos(
       semSemana += 1;
       continue;
     }
-    const bairro =
-      campo(linha, 'NM_BAIRRO').trim().toUpperCase() || 'NAO INFORMADO';
+    const bairro = bairroDe(linha);
     const chave = `${bairro}|${semana}`;
     const atual = porChave.get(chave);
     if (atual) {
@@ -200,6 +234,7 @@ export async function coletarRecurso(recurso: Recurso): Promise<Coleta> {
         agravo: recurso.agravo,
         ano: recurso.ano,
         modificado_em: recurso.modificadoEm,
+        versao: VERSAO_CONTAGEM,
         linhas: linhas.length,
         descartadas,
         sem_semana: semSemana,
