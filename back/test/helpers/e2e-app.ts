@@ -19,7 +19,7 @@ export async function criarAppE2e(): Promise<AppE2e> {
 }
 
 // Ordem das chaves estrangeiras. controle_avaliacao_alerta mantém a linha única
-// criada pela migração.
+// criada pela migração; só o marcador volta a nulo.
 const TABELAS = [
   'acao',
   'alerta_acao_manual',
@@ -36,4 +36,9 @@ export async function limparBanco(app: AppE2e) {
   for (const tabela of TABELAS) {
     await fonte.query(`DELETE FROM app.${tabela}`);
   }
+  // O marcador só avança (DEC-015): sem isto, um job rodado com a hora real
+  // num arquivo deixaria o marcador à frente da hora fixa de outro.
+  await fonte.query(
+    'UPDATE app.controle_avaliacao_alerta SET ultima_lida_em = NULL',
+  );
 }
