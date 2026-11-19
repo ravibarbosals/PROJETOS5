@@ -42,6 +42,8 @@ export interface EntradaAvaliacao {
   serieDoAlerta: PontoDaSerie[];
   // Leitura mais recente da fonte para a variável + território; null se nenhuma.
   ultimaLeituraEm: Date | null;
+  // Último encerramento de alerta da variável + território; null se nenhum.
+  ultimoEncerramentoEm: Date | null;
   agora: Date;
   estabilizacaoHoras: number;
   expiracaoHoras: number;
@@ -102,8 +104,20 @@ export function avaliarLeitura(entrada: EntradaAvaliacao): Decisao {
   const { alerta, agora } = entrada;
   const cruzado = maiorParametroCruzado(entrada.avaliacoes);
 
+  // RN-015 #3: fonte parada; leituras antigas não mantêm nem disparam alerta.
+  const semLeitura =
+    entrada.ultimaLeituraEm === null ||
+    agora.getTime() - entrada.ultimaLeituraEm.getTime() >=
+      entrada.expiracaoHoras * HORA_MS;
+
   if (!alerta) {
-    return cruzado
+    // RN-015 #10: depois de um encerramento, só uma leitura nova dispara.
+    const novo =
+      cruzado !== null &&
+      !semLeitura &&
+      (entrada.ultimoEncerramentoEm === null ||
+        cruzado.lidaEm > entrada.ultimoEncerramentoEm);
+    return novo
       ? { tipo: 'DISPARAR', avaliacao: cruzado }
       : { tipo: 'NENHUMA' };
   }
@@ -112,11 +126,6 @@ export function avaliarLeitura(entrada: EntradaAvaliacao): Decisao {
   const prorrogado =
     alerta.prorrogadoAte !== null && alerta.prorrogadoAte > agora;
 
-  // RN-015 #3: fonte parada; leituras antigas não mantêm o alerta.
-  const semLeitura =
-    entrada.ultimaLeituraEm === null ||
-    agora.getTime() - entrada.ultimaLeituraEm.getTime() >=
-      entrada.expiracaoHoras * HORA_MS;
   if (semLeitura) {
     return prorrogado
       ? { tipo: 'NENHUMA' }

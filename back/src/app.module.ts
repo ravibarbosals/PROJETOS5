@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from '@/app.controller';
 import { AppService } from '@/app.service';
 import {
@@ -27,6 +28,8 @@ import { RastreioOperacionalModule } from '@/modules/rastreio-operacional/rastre
       validate: validateEnv,
       envFilePath: process.env.DOTENV_CONFIG_PATH ?? '.env',
     }),
+    // DEC-015: job de alertas.
+    ScheduleModule.forRoot(),
     DatabaseModule,
     HealthModule,
     AcessoModule,

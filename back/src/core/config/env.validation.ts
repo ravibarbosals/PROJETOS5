@@ -39,6 +39,25 @@ export class EnvironmentVariables {
   // Formato aceito pelo jsonwebtoken: número + s/m/h/d (ex.: 8h).
   @Matches(/^\d+[smhd]$/)
   JWT_EXPIRES_IN: `${number}${'s' | 'm' | 'h' | 'd'}` = '8h';
+
+  // DEC-015: intervalo do job de alertas, abaixo da latência máxima de 1 h
+  // (PR-010).
+  @IsInt()
+  @Min(1)
+  @Max(59)
+  ALERTA_INTERVALO_MINUTOS: number = 10;
+
+  // RN-015 #1: horas seguidas abaixo do limiar de saída para encerrar.
+  @IsInt()
+  @Min(1)
+  @Max(24)
+  ALERTA_ESTABILIZACAO_HORAS: number = 2;
+
+  // RN-015 #3: horas sem leitura nova da fonte para expirar.
+  @IsInt()
+  @Min(1)
+  @Max(72)
+  ALERTA_EXPIRACAO_HORAS: number = 6;
 }
 
 export function validateEnv(config: Record<string, unknown>) {

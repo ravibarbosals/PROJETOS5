@@ -47,6 +47,7 @@ const entrada = (
   alerta: null,
   serieDoAlerta: [],
   ultimaLeituraEm: horasAtras(0.5),
+  ultimoEncerramentoEm: null,
   agora: AGORA,
   estabilizacaoHoras: 2,
   expiracaoHoras: 6,
@@ -74,6 +75,30 @@ describe('avaliarLeitura: disparo (RN-012)', () => {
     expect(avaliarLeitura(entrada({ avaliacoes: lido(29.9) }))).toEqual({
       tipo: 'NENHUMA',
     });
+  });
+
+  it('does not fire on a stale reading (RN-015 #3)', () => {
+    expect(
+      avaliarLeitura(
+        entrada({ avaliacoes: lido(40), ultimaLeituraEm: horasAtras(6) }),
+      ),
+    ).toEqual({ tipo: 'NENHUMA' });
+  });
+
+  it('fires again only on a reading after the last closing (RN-015 #10)', () => {
+    expect(
+      avaliarLeitura(
+        entrada({
+          avaliacoes: lido(40),
+          ultimoEncerramentoEm: horasAtras(0.5),
+        }),
+      ),
+    ).toEqual({ tipo: 'NENHUMA' });
+    expect(
+      avaliarLeitura(
+        entrada({ avaliacoes: lido(40), ultimoEncerramentoEm: horasAtras(1) }),
+      ),
+    ).toMatchObject({ tipo: 'DISPARAR' });
   });
 });
 
