@@ -16,11 +16,14 @@ services:
       timeout: 5s
       retries: 10
 
-  # The app schema lives outside the migrations (DEC-016): same step as on Neon.
+  # The schemas live outside the migrations (DEC-016): the same SQL used on Neon
+  # creates app, bronze and gold (idempotent).
   db-init:
     image: postgres:17-alpine
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../dados/sql:/sql:ro
     command:
       - psql
       - -h
@@ -31,8 +34,8 @@ services:
       - ${POSTGRES_DB:-vigia}
       - -v
       - ON_ERROR_STOP=1
-      - -c
-      - CREATE SCHEMA IF NOT EXISTS app
+      - -f
+      - /sql/schema.sql
     depends_on:
       db:
         condition: service_healthy
@@ -75,6 +78,19 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+
+  # Data pipeline scheduler (DEC-026): one collect + transform cycle on start,
+  # then every INTERVALO_MINUTOS. Writes bronze and gold; the API only reads gold.
+  dados:
+    build: ../dados
+    image: vigia-dados
+    environment:
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vigia}
+      INTERVALO_MINUTOS: ${INTERVALO_MINUTOS:-60}
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    restart: unless-stopped
 
   front:
     build: ../front

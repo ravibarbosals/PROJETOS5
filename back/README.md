@@ -23,9 +23,10 @@ Esse comando sobe o sistema inteiro, em ordem:
 | Serviço | O que faz |
 |---|---|
 | `db` | PostgreSQL 17 |
-| `db-init` | Cria o schema `app` (roda uma vez e termina) |
+| `db-init` | Cria os schemas `app`, `bronze` e `gold` com o `../dados/sql/schema.sql` (idempotente; roda e termina) |
 | `migrate` | Aplica as migrations pendentes e cria o primeiro administrador com os dados `ADMIN_*` (roda uma vez e termina) |
 | `api` | API em http://localhost:3000 (`/health` mostra o banco) |
+| `dados` | Agendador da pipeline (DEC-026): coleta e trata ao subir e a cada `INTERVALO_MINUTOS` (padrão 60). Logs: `docker compose logs -f dados` |
 | `front` | Interface em **http://localhost:8080**. O nginx repassa `/api` para a API |
 
 Entre no front com o `ADMIN_EMAIL` e a `ADMIN_SENHA` do `.env`. O seed é idempotente: se já existe um administrador, nada é criado nem alterado. Para outra porta, use `PORT` (API) ou `FRONT_PORT` (front) no `.env`.
