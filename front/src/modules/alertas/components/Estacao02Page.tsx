@@ -19,7 +19,8 @@ export function Estacao02Page() {
           <TabsTrigger value="parametros">Parâmetros</TabsTrigger>
         </TabsList>
         <TabsContent value="alertas" className="pt-4">
-          <AlertasPanel />
+          {/* Só o Gestor (e o ADM, PR-023) abre a EST-02: as três ações (PER-014, PER-015). */}
+          <AlertasPanel acoes={['encerrar', 'prorrogar', 'invalidar']} />
         </TabsContent>
         <TabsContent value="linha-do-tempo" className="pt-4">
           <LinhaDoTempoPanel podeRegistrar />

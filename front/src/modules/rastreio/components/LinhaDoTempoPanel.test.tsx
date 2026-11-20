@@ -30,6 +30,9 @@ const alertaAtivo: Alerta = {
   disparado_em: '2026-10-24T13:00:00Z',
   fonte_atualizada_em: null,
   status: 'ATIVO',
+  prorrogado_ate: null,
+  encerrado_em: null,
+  motivo_encerramento: null,
 }
 
 const acao: Acao = {

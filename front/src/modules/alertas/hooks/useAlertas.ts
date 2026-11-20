@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  agirSobreAlerta,
   alterarParametro,
   criarParametro,
   listarAlertas,
@@ -7,9 +8,14 @@ import {
   listarParametros,
   type ListarAlertasParams,
 } from '@/modules/alertas/service/alertas.service'
-import type { AlterarParametroRequest } from '@/modules/alertas/types'
+import type {
+  AcaoManual,
+  AcaoManualRequest,
+  AlterarParametroRequest,
+} from '@/modules/alertas/types'
 
 export const alertasKeys = {
+  all: ['alertas'] as const,
   lista: (params: ListarAlertasParams) => ['alertas', params] as const,
 }
 
@@ -58,5 +64,20 @@ export function useAlterarParametro() {
       alterarParametro(id, dados),
     // Lista e histórico do parâmetro mudam juntos (RN-001).
     onSuccess: () => queryClient.invalidateQueries({ queryKey: parametrosKeys.all }),
+  })
+}
+
+export function useAgirSobreAlerta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, acao, dados }: { id: number; acao: AcaoManual; dados: AcaoManualRequest }) =>
+      agirSobreAlerta(id, acao, dados),
+    // O alerta muda de situação; o invalidado sai do tempo médio (RN-015 #5).
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: alertasKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['linha-do-tempo'] }),
+        queryClient.invalidateQueries({ queryKey: ['indicadores'] }),
+      ]),
   })
 }

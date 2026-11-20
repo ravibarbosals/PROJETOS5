@@ -1,4 +1,9 @@
+// Contratos do MOD-002 (DEC-011: snake_case).
+
 export type StatusAlerta = 'ATIVO' | 'ENCERRADO'
+
+// RN-015: como o alerta foi encerrado.
+export type MotivoEncerramento = 'NORMALIZADO' | 'EXPIRADO' | 'MANUAL' | 'INVALIDADO'
 
 export interface Alerta {
   id: number
@@ -12,6 +17,20 @@ export interface Alerta {
   /** Nulo até o contrato do gold (DEC-009, RN-007 #2) */
   fonte_atualizada_em: string | null
   status: StatusAlerta
+  /** Enquanto no futuro, o job não encerra o alerta sozinho (RN-015 #6) */
+  prorrogado_ate: string | null
+  encerrado_em: string | null
+  motivo_encerramento: MotivoEncerramento | null
+}
+
+// Ações manuais do MOD-002 (PER-014, PER-015); o tipo é o fim da rota.
+export type AcaoManual = 'encerrar' | 'prorrogar' | 'invalidar'
+
+export interface AcaoManualRequest {
+  /** No mínimo 10 caracteres, sem contar espaços nas pontas (RN-015 #8) */
+  motivo: string
+  /** Só no prorrogar: inteiro de 1 a 24 */
+  horas?: number
 }
 
 // DEC-029: dois níveis.

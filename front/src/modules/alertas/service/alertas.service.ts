@@ -1,6 +1,8 @@
 import { http } from '@/lib/http'
 import type { Paginated } from '@/lib/pagination'
 import type {
+  AcaoManual,
+  AcaoManualRequest,
   Alerta,
   AlterarParametroRequest,
   CriarParametroRequest,
@@ -15,6 +17,12 @@ export interface ListarAlertasParams {
   page: number
   /** Sem status: ativos e encerrados (histórico) */
   status?: StatusAlerta
+}
+
+// PER-014 / PER-015: usuário e hora vêm do servidor (RN-015 #8).
+export async function agirSobreAlerta(id: number, acao: AcaoManual, dados: AcaoManualRequest) {
+  const { data } = await http.post<Alerta>(`/alertas/${id}/${acao}`, dados)
+  return data
 }
 
 export async function listarAlertas({ page, status }: ListarAlertasParams) {
