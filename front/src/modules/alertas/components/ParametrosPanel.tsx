@@ -59,6 +59,8 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
                   <TableHead>Variável</TableHead>
                   <TableHead>Território</TableHead>
                   <TableHead className="text-right">Limiar</TableHead>
+                  <TableHead className="text-right">Saída</TableHead>
+                  <TableHead className="text-right">Janela</TableHead>
                   <TableHead>Nível</TableHead>
                   <TableHead>Situação</TableHead>
                   <TableHead>Atualizado em</TableHead>
@@ -68,7 +70,7 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
               <TableBody>
                 {pagina.data.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center text-muted-foreground">
                       Nenhum parâmetro cadastrado.
                     </TableCell>
                   </TableRow>
@@ -79,6 +81,12 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
                     <TableCell>{parametro.territorio}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatarNumero(parametro.limiar)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {formatarNumero(parametro.limiar_saida)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {parametro.janela_horas} h
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{parametro.nivel}</Badge>

@@ -27,6 +27,32 @@ export function lerNumero(texto: string): number | null {
   return Number(limpo)
 }
 
+// Filtra o que é digitado num campo numérico em pt-BR: só dígitos, uma vírgula
+// (o ponto vira vírgula), até `casas` decimais e, se permitido, o sinal no início.
+export function filtrarNumero(
+  texto: string,
+  { casas = 3, negativo = true }: { casas?: number; negativo?: boolean } = {},
+): string {
+  const sinal = negativo && texto.trimStart().startsWith('-') ? '-' : ''
+  let inteiro = ''
+  let decimal: string | null = null
+  for (const c of texto) {
+    if (c >= '0' && c <= '9') {
+      if (decimal === null) inteiro += c
+      else if (decimal.length < casas) decimal += c
+    } else if ((c === ',' || c === '.') && casas > 0 && decimal === null) {
+      decimal = ''
+    }
+  }
+  return sinal + inteiro + (decimal === null ? '' : `,${decimal}`)
+}
+
+// Valor para pré-preencher um campo editável: 1234.5 → "1234,5" (sem milhar,
+// que o filtro do campo não aceita).
+export function numeroParaCampo(valor: number): string {
+  return String(valor).replace('.', ',')
+}
+
 // Duração em segundos para leitura rápida: 45 → "45 s"; 2280 → "38 min"; 3900 → "1 h 05 min".
 export function formatarDuracao(segundos: number): string {
   if (segundos < 60) return `${segundos} s`

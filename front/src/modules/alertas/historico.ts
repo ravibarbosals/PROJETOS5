@@ -11,6 +11,8 @@ const ROTULO_CAMPO: Record<string, string> = {
   variavel: 'Variável',
   territorio: 'Território',
   limiar: 'Limiar',
+  limiar_saida: 'Limiar de saída',
+  janela_horas: 'Janela (h)',
   nivel: 'Nível',
   ativo: 'Situação',
 }

@@ -22,6 +22,16 @@ describe('descreverMudancas (RN-001)', () => {
     ).toEqual(['Limiar: 50 → 62,5', 'Situação: Ativo → Inativo'])
   })
 
+  it('dá nome aos campos da DEC-029', () => {
+    expect(
+      descreverMudancas({
+        ...base,
+        valor_anterior: { limiar_saida: 20, janela_horas: 24 },
+        valor_novo: { limiar_saida: 15, janela_horas: 12 },
+      }),
+    ).toEqual(['Limiar de saída: 20 → 15', 'Janela (h): 24 → 12'])
+  })
+
   it('mostra só o valor novo na criação', () => {
     expect(
       descreverMudancas({

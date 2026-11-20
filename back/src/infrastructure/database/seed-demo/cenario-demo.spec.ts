@@ -128,4 +128,8 @@ describe('alertaAtivoDemo (--ativo)', () => {
       new Date(AGORA.getTime() + PRORROGACAO_DEMO_HORAS * HORA_MS),
     );
   });
+
+  it('says in the extension reason that it is a demonstration', () => {
+      expect(ativo.acoesManuais[0].motivo).toMatch(/^Demonstração/);
+    });
 });

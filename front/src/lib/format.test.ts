@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { formatarDataHora, formatarDuracao, formatarNumero, lerNumero } from '@/lib/format'
+import {
+  filtrarNumero,
+  formatarDataHora,
+  formatarDuracao,
+  formatarNumero,
+  lerNumero,
+  numeroParaCampo,
+} from '@/lib/format'
 
 describe('format', () => {
   it('mostra a data UTC no horário do Recife (UTC−3)', () => {
@@ -24,6 +31,38 @@ describe('lerNumero', () => {
 
   it.each(['', 'abc', '1,2,3', '12a'])('recusa %j', (texto) => {
     expect(lerNumero(texto)).toBeNull()
+  })
+})
+
+describe('filtrarNumero', () => {
+  it('descarta letras e outros caracteres', () => {
+    expect(filtrarNumero('3a7b')).toBe('37')
+    expect(filtrarNumero('abc')).toBe('')
+    expect(filtrarNumero('1 2%3')).toBe('123')
+  })
+
+  it('aceita uma vírgula decimal e troca o ponto por vírgula', () => {
+    expect(filtrarNumero('30,5')).toBe('30,5')
+    expect(filtrarNumero('30.5')).toBe('30,5')
+    expect(filtrarNumero('3,0,5')).toBe('3,05')
+  })
+
+  it('limita as casas decimais (decimal(12,3) do banco)', () => {
+    expect(filtrarNumero('1,23456')).toBe('1,234')
+    expect(filtrarNumero('1,5', { casas: 0 })).toBe('15')
+  })
+
+  it('aceita o sinal só no início e só se permitido', () => {
+    expect(filtrarNumero('-5')).toBe('-5')
+    expect(filtrarNumero('5-')).toBe('5')
+    expect(filtrarNumero('-5', { negativo: false })).toBe('5')
+  })
+})
+
+describe('numeroParaCampo', () => {
+  it('usa vírgula decimal e não põe separador de milhar', () => {
+    expect(numeroParaCampo(1234.5)).toBe('1234,5')
+    expect(numeroParaCampo(30)).toBe('30')
   })
 })
 

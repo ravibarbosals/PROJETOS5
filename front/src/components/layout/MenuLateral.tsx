@@ -15,9 +15,10 @@ interface ConteudoDoMenuProps {
 }
 
 // Menu fixo à esquerda a partir de 768 px; abaixo disso abre pelo MenuMovel.
+// Preso à altura da janela: a página rola sozinha e o "Sair" continua à vista.
 export function MenuLateral(props: ConteudoDoMenuProps) {
   return (
-    <aside className="hidden w-60 shrink-0 flex-col gap-6 p-4 md:flex">
+    <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col gap-6 overflow-y-auto p-4 md:flex">
       <ConteudoDoMenu {...props} />
     </aside>
   )

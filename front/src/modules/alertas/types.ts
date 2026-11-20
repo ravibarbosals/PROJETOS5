@@ -1,5 +1,3 @@
-// Contratos do MOD-002 (DEC-011: snake_case).
-
 export type StatusAlerta = 'ATIVO' | 'ENCERRADO'
 
 export interface Alerta {
@@ -16,12 +14,19 @@ export interface Alerta {
   status: StatusAlerta
 }
 
+// DEC-029: dois níveis.
+export type NivelAlerta = 'MODERADO' | 'ALTO'
+
 export interface ParametroAlerta {
   id: number
   variavel: string
   territorio: string
   limiar: number
-  nivel: string
+  /** Encerra só abaixo deste valor; menor que o limiar (RN-015) */
+  limiar_saida: number
+  /** Horas somadas no acumulado da chuva (RN-012) */
+  janela_horas: number
+  nivel: NivelAlerta
   ativo: boolean
   atualizado_em: string
 }
@@ -30,13 +35,17 @@ export interface CriarParametroRequest {
   variavel: string
   territorio: string
   limiar: number
-  nivel: string
+  limiar_saida: number
+  janela_horas: number
+  nivel: NivelAlerta
 }
 
 // Variável e território identificam o parâmetro e não mudam.
 export interface AlterarParametroRequest {
   limiar?: number
-  nivel?: string
+  limiar_saida?: number
+  janela_horas?: number
+  nivel?: NivelAlerta
   ativo?: boolean
 }
 

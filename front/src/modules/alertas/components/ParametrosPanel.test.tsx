@@ -29,6 +29,8 @@ const parametro: ParametroAlerta = {
   variavel: 'chuva_1h',
   territorio: 'RPA-1',
   limiar: 50,
+  limiar_saida: 20,
+  janela_horas: 3,
   nivel: 'ALTO',
   ativo: true,
   atualizado_em: '2026-10-24T13:00:00Z',
@@ -55,41 +57,98 @@ describe('ParametrosPanel', () => {
     ).toBeInTheDocument()
   })
 
-  it('o Gestor cria um parâmetro com limiar em pt-BR (PER-005)', async () => {
+  it('o Gestor cria um parâmetro com limiares em pt-BR, janela e nível (PER-005, DEC-029)', async () => {
     criarMock.mockResolvedValue({ ...parametro, id: 4 })
     renderWithQuery(<ParametrosPanel podeEditar />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Novo parâmetro' }))
     const dialogo = screen.getByRole('dialog')
-    await userEvent.type(within(dialogo).getByLabelText('Variável'), 'nivel_rio')
-    await userEvent.type(within(dialogo).getByLabelText('Território'), 'RPA-2')
-    await userEvent.type(within(dialogo).getByLabelText('Limiar'), '3,25')
-    await userEvent.type(within(dialogo).getByLabelText('Nível'), 'MEDIO')
+    await userEvent.selectOptions(within(dialogo).getByLabelText('Variável'), 'precipitacao_mm')
+    await userEvent.type(within(dialogo).getByLabelText('Limiar'), '30,5')
+    await userEvent.type(within(dialogo).getByLabelText('Limiar de saída'), '10')
+    const janela = within(dialogo).getByLabelText('Janela (horas)')
+    await userEvent.clear(janela)
+    await userEvent.type(janela, '24')
+    await userEvent.selectOptions(within(dialogo).getByLabelText('Nível'), 'ALTO')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
 
     expect(criarMock.mock.calls[0]?.[0]).toEqual({
-      variavel: 'nivel_rio',
-      territorio: 'RPA-2',
-      limiar: 3.25,
-      nivel: 'MEDIO',
+      variavel: 'precipitacao_mm',
+      territorio: 'Recife',
+      limiar: 30.5,
+      limiar_saida: 10,
+      janela_horas: 24,
+      nivel: 'ALTO',
     })
   })
 
-  it('não deixa salvar limiar que não é número', async () => {
+  it('só oferece as variáveis e os territórios do gold e os níveis da DEC-029', async () => {
     renderWithQuery(<ParametrosPanel podeEditar />)
 
     await userEvent.click(await screen.findByRole('button', { name: 'Novo parâmetro' }))
     const dialogo = screen.getByRole('dialog')
-    await userEvent.type(within(dialogo).getByLabelText('Variável'), 'x')
-    await userEvent.type(within(dialogo).getByLabelText('Território'), 'y')
-    await userEvent.type(within(dialogo).getByLabelText('Limiar'), 'abc')
-    await userEvent.type(within(dialogo).getByLabelText('Nível'), 'z')
+    const opcoes = (rotulo: string) =>
+      within(within(dialogo).getByLabelText(rotulo))
+        .getAllByRole('option')
+        .map((o) => o.getAttribute('value'))
 
-    expect(within(dialogo).getByText('Informe um número')).toBeInTheDocument()
+    expect(opcoes('Variável')).toEqual([
+      'precipitacao_mm',
+      'temperatura_c',
+      'umidade_pct',
+      'pressao_hpa',
+    ])
+    expect(opcoes('Território')).toEqual(['Recife'])
+    expect(opcoes('Nível')).toEqual(['MODERADO', 'ALTO'])
+  })
+
+  it('aceita só números nos limiares e na janela', async () => {
+    renderWithQuery(<ParametrosPanel podeEditar />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo parâmetro' }))
+    const dialogo = screen.getByRole('dialog')
+    const limiar = within(dialogo).getByLabelText('Limiar')
+    const saida = within(dialogo).getByLabelText('Limiar de saída')
+    const janela = within(dialogo).getByLabelText('Janela (horas)')
+    await userEvent.type(limiar, 'a3b0.5x')
+    await userEvent.type(saida, 'dez')
+    await userEvent.clear(janela)
+    await userEvent.type(janela, '2,4h')
+
+    expect(limiar).toHaveValue('30,5')
+    expect(saida).toHaveValue('')
+    expect(janela).toHaveValue('24')
     expect(within(dialogo).getByRole('button', { name: 'Salvar' })).toBeDisabled()
   })
 
-  it('edita só limiar e nível; variável e território ficam travados', async () => {
+  it('exige o limiar de saída abaixo do limiar (DEC-029)', async () => {
+    renderWithQuery(<ParametrosPanel podeEditar />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo parâmetro' }))
+    const dialogo = screen.getByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Limiar'), '30')
+    await userEvent.type(within(dialogo).getByLabelText('Limiar de saída'), '30')
+
+    expect(within(dialogo).getByText('Deve ser menor que o limiar')).toBeInTheDocument()
+    expect(within(dialogo).getByRole('button', { name: 'Salvar' })).toBeDisabled()
+  })
+
+  it('aceita janela só inteira de 1 a 72 horas', async () => {
+    renderWithQuery(<ParametrosPanel podeEditar />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Novo parâmetro' }))
+    const dialogo = screen.getByRole('dialog')
+    await userEvent.type(within(dialogo).getByLabelText('Limiar'), '30')
+    await userEvent.type(within(dialogo).getByLabelText('Limiar de saída'), '10')
+    const janela = within(dialogo).getByLabelText('Janela (horas)')
+    await userEvent.clear(janela)
+    await userEvent.type(janela, '73')
+
+    expect(within(dialogo).getByText('Inteiro de 1 a 72')).toBeInTheDocument()
+    expect(within(dialogo).getByRole('button', { name: 'Salvar' })).toBeDisabled()
+  })
+
+  it('edita limiares, janela e nível; variável e território ficam travados', async () => {
     alterarMock.mockResolvedValue({ ...parametro, limiar: 60 })
     renderWithQuery(<ParametrosPanel podeEditar />)
 
@@ -99,13 +158,29 @@ describe('ParametrosPanel', () => {
     const dialogo = screen.getByRole('dialog')
     expect(within(dialogo).getByLabelText('Variável')).toBeDisabled()
     expect(within(dialogo).getByLabelText('Território')).toBeDisabled()
+    expect(within(dialogo).getByLabelText('Variável')).toHaveValue('chuva_1h')
+    expect(within(dialogo).getByLabelText('Território')).toHaveValue('RPA-1')
+    expect(within(dialogo).getByLabelText('Limiar')).toHaveValue('50')
 
     const limiar = within(dialogo).getByLabelText('Limiar')
     await userEvent.clear(limiar)
     await userEvent.type(limiar, '60')
     await userEvent.click(within(dialogo).getByRole('button', { name: 'Salvar' }))
 
-    expect(alterarMock).toHaveBeenCalledWith(3, { limiar: 60, nivel: 'ALTO' })
+    expect(alterarMock).toHaveBeenCalledWith(3, {
+      limiar: 60,
+      limiar_saida: 20,
+      janela_horas: 3,
+      nivel: 'ALTO',
+    })
+  })
+
+  it('mostra limiar de saída e janela na lista', async () => {
+    renderWithQuery(<ParametrosPanel podeEditar={false} />)
+
+    const linha = (await screen.findByText('chuva_1h')).closest('tr')!
+    expect(within(linha).getByText('20')).toBeInTheDocument()
+    expect(within(linha).getByText('3 h')).toBeInTheDocument()
   })
 
   it('inativa só depois de confirmar (DEC-014)', async () => {
