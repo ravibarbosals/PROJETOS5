@@ -70,7 +70,13 @@ function Detalhe({ alerta, onAgir }: { alerta: Alerta; onAgir?: (alerta: Alerta)
           <Item rotulo="Escalonado para ALTO">{formatarDataHora(alerta.escalonado_em)}</Item>
         )}
         {alerta.prorrogado_ate && (
-          <Item rotulo={prorrogado(alerta, agora) ? 'Prorrogado até' : 'Prorrogação venceu em'}>
+          // "Venceu" só faz sentido no ativo: no encerrado, o prazo pode ter sido
+          // interrompido pelo encerramento.
+          <Item
+            rotulo={
+              ativo && !prorrogado(alerta, agora) ? 'Prorrogação venceu em' : 'Prorrogado até'
+            }
+          >
             {formatarDataHora(alerta.prorrogado_ate)}
           </Item>
         )}
