@@ -17,6 +17,7 @@ import { filtrarNumero, formatarNumero } from '@/lib/format'
 import { describeApiError } from '@/lib/http'
 import { useAgirSobreAlerta } from '@/modules/alertas/hooks/useAlertas'
 import type { AcaoManual, Alerta } from '@/modules/alertas/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 // RN-015 #8 (ck_alerta_acao_manual_motivo).
 const MOTIVO_MIN = 10
@@ -57,7 +58,7 @@ export function AcaoAlertaDialog({ alerta, acoes, onClose }: AcaoAlertaDialogPro
           <DialogTitle>Agir sobre o alerta #{alerta?.id}</DialogTitle>
           <DialogDescription>
             {alerta &&
-              `${alerta.nivel} · ${alerta.parametro.variavel} em ${alerta.territorio} · leitura ${formatarNumero(alerta.valor_lido)}`}
+              `${alerta.nivel} · ${rotuloVariavel(alerta.parametro.variavel)} em ${alerta.territorio} · máximo ${formatarNumero(alerta.valor_maximo)}`}
           </DialogDescription>
         </DialogHeader>
         {alerta && <AcaoAlertaForm key={alerta.id} alerta={alerta} acoes={acoes} onDone={onClose} />}

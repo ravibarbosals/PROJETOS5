@@ -98,6 +98,11 @@ describe('ParametrosPanel', () => {
       'umidade_pct',
       'pressao_hpa',
     ])
+    expect(
+      within(within(dialogo).getByLabelText('Variável'))
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Chuva (mm)', 'Temperatura (°C)', 'Umidade (%)', 'Pressão (hPa)'])
     expect(opcoes('Território')).toEqual(['Recife'])
     expect(opcoes('Nível')).toEqual(['MODERADO', 'ALTO'])
   })

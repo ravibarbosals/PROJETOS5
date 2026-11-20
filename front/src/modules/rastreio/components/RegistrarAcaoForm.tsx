@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { describeApiError } from '@/lib/http'
 import { useAlertasQuery } from '@/modules/alertas/hooks/useAlertas'
 import { useCriarAcao } from '@/modules/rastreio/hooks/useRastreio'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 const SEM_ALERTA = ''
 const DESCRICAO_MAX = 2000
@@ -26,7 +27,7 @@ export function RegistrarAcaoForm() {
     { valor: SEM_ALERTA, rotulo: 'Sem alerta relacionado' },
     ...(ativos.data?.data ?? []).map((a) => ({
       valor: String(a.id),
-      rotulo: `#${a.id} · ${a.nivel} · ${a.parametro.variavel} em ${a.territorio}`,
+      rotulo: `#${a.id} · ${a.nivel} · ${rotuloVariavel(a.parametro.variavel)} em ${a.territorio}`,
     })),
   ]
 

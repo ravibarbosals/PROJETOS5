@@ -11,6 +11,10 @@ import { logado } from './helpers/e2e-usuarios';
 interface AlertaListado {
   fonte: string;
   fonte_atualizada_em: string | null;
+  valor_lido: number;
+  valor_maximo: number;
+  ultima_leitura_em: string;
+  escalonado_em: string | null;
 }
 
 // MOD-002, RN-007, RN-013. A data da fonte vem da view do gold e o alerta ativo
@@ -52,6 +56,28 @@ describe('Alertas (e2e)', () => {
     expect(alerta).toMatchObject({
       fonte: 'APAC',
       fonte_atualizada_em: coletadoEm.toISOString(),
+    });
+  });
+
+  it('answers the incident maximum and the escalation time (RN-012 #4, #5)', async () => {
+    const alerta = await criarAlerta(app, {
+      disparadoEm: new Date('2026-11-18T12:05:00Z'),
+    });
+    const ultimaLeituraEm = new Date('2026-11-18T15:00:00Z');
+    const escalonadoEm = new Date('2026-11-18T13:05:00Z');
+    await app.get(DataSource).getRepository(Alerta).update(alerta.id, {
+      valorMaximo: 71.2,
+      ultimaLeituraEm,
+      dthrEscalonamento: escalonadoEm,
+    });
+
+    const [listado] = await listar();
+
+    expect(listado).toMatchObject({
+      valor_lido: 62.5,
+      valor_maximo: 71.2,
+      ultima_leitura_em: ultimaLeituraEm.toISOString(),
+      escalonado_em: escalonadoEm.toISOString(),
     });
   });
 

@@ -9,29 +9,27 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { formatarDataHora, formatarNumero } from '@/lib/format'
-import type { Alerta, MotivoEncerramento } from '@/modules/alertas/types'
-
-// RN-015: como cada alerta terminou.
-const ROTULO_MOTIVO: Record<MotivoEncerramento, string> = {
-  NORMALIZADO: 'Normalizado',
-  EXPIRADO: 'Expirado (sem leitura)',
-  MANUAL: 'Encerrado manualmente',
-  INVALIDADO: 'Invalidado',
-}
+import { formatarDataHoraCurta, formatarNumero } from '@/lib/format'
+import { rotuloSituacao } from '@/modules/alertas/situacao'
+import type { Alerta } from '@/modules/alertas/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 interface AlertasTableProps {
   alertas: Alerta[]
+  /** Abre o detalhe do alerta (1ª leitura, fonte, escalonamento, encerramento). */
+  onDetalhar: (alerta: Alerta) => void
   /** Com a função, os ativos ganham o botão de ação manual (PER-014, PER-015). */
   onAgir?: (alerta: Alerta) => void
 }
 
-// REQ-005 (2): fonte e hora da leitura. O destaque por cor de nível depende da
-// escala (DUV-010); até lá o nível aparece como texto.
-export function AlertasTable({ alertas, onAgir }: AlertasTableProps) {
+// Lista enxuta (escolha do usuário na TASK-067): o máximo do incidente contra o
+// limiar do nível atual (RN-012 #4, #5) e a situação numa linha. Fonte e hora da
+// leitura (REQ-005 #2, REQ-019) ficam no detalhe, aberto ao clicar na linha.
+export function AlertasTable({ alertas, onDetalhar, onAgir }: AlertasTableProps) {
   // Hora da montagem da tabela: a lista é recarregada a cada ação ou atualização.
   const [agora] = useState(() => Date.now())
-  const colunas = onAgir ? 9 : 8
+  const comAcoes = !!onAgir && alertas.some((a) => a.status === 'ATIVO')
+  const colunas = comAcoes ? 7 : 6
 
   return (
     <Table>
@@ -40,12 +38,10 @@ export function AlertasTable({ alertas, onAgir }: AlertasTableProps) {
           <TableHead>Nível</TableHead>
           <TableHead>Variável</TableHead>
           <TableHead>Território</TableHead>
-          <TableHead className="text-right">Leitura / limiar</TableHead>
-          <TableHead>Fonte</TableHead>
-          <TableHead>Lida em</TableHead>
-          <TableHead>Disparado em</TableHead>
+          <TableHead className="text-right">Máximo / limiar</TableHead>
+          <TableHead>Disparado</TableHead>
           <TableHead>Situação</TableHead>
-          {onAgir && <TableHead className="text-right">Ações</TableHead>}
+          {comAcoes && <TableHead className="text-right">Ações</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -57,45 +53,46 @@ export function AlertasTable({ alertas, onAgir }: AlertasTableProps) {
           </TableRow>
         )}
         {alertas.map((alerta) => (
-          <TableRow key={alerta.id}>
+          <TableRow
+            key={alerta.id}
+            tabIndex={0}
+            aria-label={`Detalhes do alerta #${alerta.id}`}
+            className="cursor-pointer"
+            onClick={() => onDetalhar(alerta)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onDetalhar(alerta)
+              }
+            }}
+          >
             <TableCell>
               <Badge variant="secondary">{alerta.nivel}</Badge>
             </TableCell>
-            <TableCell>{alerta.parametro.variavel}</TableCell>
+            <TableCell>{rotuloVariavel(alerta.parametro.variavel)}</TableCell>
             <TableCell>{alerta.territorio}</TableCell>
             <TableCell className="text-right tabular-nums">
-              <span className="font-medium">{formatarNumero(alerta.valor_lido)}</span>
+              <span className="font-medium">{formatarNumero(alerta.valor_maximo)}</span>
               <span className="text-muted-foreground"> / {formatarNumero(alerta.parametro.limiar)}</span>
             </TableCell>
-            <TableCell>{alerta.fonte}</TableCell>
-            <TableCell>{formatarDataHora(alerta.lida_em)}</TableCell>
-            <TableCell>{formatarDataHora(alerta.disparado_em)}</TableCell>
+            <TableCell className="tabular-nums">{formatarDataHoraCurta(alerta.disparado_em)}</TableCell>
             <TableCell>
               <Badge variant={alerta.status === 'ATIVO' ? 'destructive' : 'outline'}>
-                {alerta.status === 'ATIVO' ? 'Ativo' : 'Encerrado'}
+                {rotuloSituacao(alerta, agora)}
               </Badge>
-              {alerta.status === 'ATIVO' &&
-                alerta.prorrogado_ate &&
-                new Date(alerta.prorrogado_ate).getTime() > agora && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Prorrogado até {formatarDataHora(alerta.prorrogado_ate)}
-                  </p>
-                )}
-              {alerta.status === 'ENCERRADO' && alerta.motivo_encerramento && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {ROTULO_MOTIVO[alerta.motivo_encerramento]}
-                  {alerta.encerrado_em && ` · ${formatarDataHora(alerta.encerrado_em)}`}
-                </p>
-              )}
             </TableCell>
-            {onAgir && (
+            {comAcoes && (
               <TableCell className="text-right">
                 {alerta.status === 'ATIVO' && (
                   <Button
                     variant="outline"
                     size="sm"
                     aria-label={`Agir sobre o alerta #${alerta.id}`}
-                    onClick={() => onAgir(alerta)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onAgir(alerta)
+                    }}
+                    onKeyDown={(e) => e.stopPropagation()}
                   >
                     Agir
                   </Button>

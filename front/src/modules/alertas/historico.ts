@@ -1,5 +1,6 @@
 import { formatarNumero } from '@/lib/format'
 import type { HistoricoParametro, OperacaoHistorico } from '@/modules/alertas/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 export const ROTULO_OPERACAO: Record<OperacaoHistorico, string> = {
   CRIACAO: 'Criação',
@@ -17,10 +18,11 @@ const ROTULO_CAMPO: Record<string, string> = {
   ativo: 'Situação',
 }
 
-function formatarValor(valor: unknown): string {
+function formatarValor(valor: unknown, campo: string): string {
   if (valor === undefined || valor === null) return '—'
   if (typeof valor === 'boolean') return valor ? 'Ativo' : 'Inativo'
   if (typeof valor === 'number') return formatarNumero(valor)
+  if (campo === 'variavel') return rotuloVariavel(String(valor))
   return String(valor)
 }
 
@@ -28,7 +30,7 @@ function formatarValor(valor: unknown): string {
 export function descreverMudancas({ valor_anterior, valor_novo }: HistoricoParametro): string[] {
   return Object.entries(valor_novo).map(([campo, novo]) => {
     const rotulo = ROTULO_CAMPO[campo] ?? campo
-    if (!valor_anterior) return `${rotulo}: ${formatarValor(novo)}`
-    return `${rotulo}: ${formatarValor(valor_anterior[campo])} → ${formatarValor(novo)}`
+    if (!valor_anterior) return `${rotulo}: ${formatarValor(novo, campo)}`
+    return `${rotulo}: ${formatarValor(valor_anterior[campo], campo)} → ${formatarValor(novo, campo)}`
   })
 }

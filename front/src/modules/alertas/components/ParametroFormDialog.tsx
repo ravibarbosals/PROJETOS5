@@ -15,10 +15,11 @@ import { filtrarNumero, lerNumero, numeroParaCampo } from '@/lib/format'
 import { describeApiError } from '@/lib/http'
 import { useAlterarParametro, useCriarParametro } from '@/modules/alertas/hooks/useAlertas'
 import type { NivelAlerta, ParametroAlerta } from '@/modules/alertas/types'
+import { VARIAVEIS, rotuloVariavel } from '@/modules/leituras/variaveis'
 
-// Variáveis que a pipeline grava em gold.leitura_climatica (MOD-002: "valores
-// do gold"). Texto livre deixava cadastrar uma variável que nunca dispara.
-const VARIAVEIS_GOLD = ['precipitacao_mm', 'temperatura_c', 'umidade_pct', 'pressao_hpa']
+// MOD-002: só variáveis do gold. Texto livre deixava cadastrar uma variável
+// que nunca dispara.
+const VARIAVEIS_GOLD: string[] = VARIAVEIS
 
 // Territórios com leitura no gold. A granularidade (bairro, RPA) ainda está em
 // aberto (DUV-009); hoje a pipeline só grava o Recife inteiro.
@@ -135,7 +136,7 @@ function ParametroForm({ parametro, onDone }: { parametro?: ParametroAlerta; onD
         disabled={!!parametro}
         value={variavel}
         onChange={(e) => setVariavel(e.target.value)}
-        options={variaveis.map((v) => ({ valor: v, rotulo: v }))}
+        options={variaveis.map((v) => ({ valor: v, rotulo: rotuloVariavel(v) }))}
       />
       <SelectField
         label="Território"

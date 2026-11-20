@@ -15,10 +15,17 @@ export class AlertaResponseDto {
   nivel!: string;
   parametro!: ParametroResumoDto;
   territorio!: string;
+  /** Primeira leitura, a que disparou o alerta */
   valor_lido!: number;
+  /** Maior valor do incidente no parâmetro do alerta (RN-012 #4) */
+  valor_maximo!: number;
   fonte!: string;
   lida_em!: Date;
+  /** Leitura mais recente que manteve o alerta (RN-012 #4) */
+  ultima_leitura_em!: Date;
   disparado_em!: Date;
+  /** Quando subiu para ALTO; nulo se não escalonou (RN-012 #5) */
+  escalonado_em!: Date | null;
   /** Última coleta bem-sucedida da fonte (RN-007); nula se a fonte nunca foi coletada */
   fonte_atualizada_em!: Date | null;
   status!: StatusAlerta;
@@ -42,9 +49,12 @@ export class AlertaResponseDto {
       },
       territorio: alerta.territorio,
       valor_lido: alerta.valorLido,
+      valor_maximo: alerta.valorMaximo,
       fonte: alerta.fonte,
       lida_em: alerta.lidaEm,
+      ultima_leitura_em: alerta.ultimaLeituraEm,
       disparado_em: alerta.dthrDisparo,
+      escalonado_em: alerta.dthrEscalonamento,
       // RN-007 #2: nunca a hora atual quando a data da fonte é desconhecida.
       fonte_atualizada_em: fonteAtualizadaEm,
       status: alerta.status,

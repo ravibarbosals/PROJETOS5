@@ -16,6 +16,7 @@ import { formatarDataHora, formatarDuracao } from '@/lib/format'
 import type { Periodo } from '@/lib/periodo'
 import { useTempoAcionamentoQuery } from '@/modules/indicadores/hooks/useIndicadores'
 import type { TempoAcionamento } from '@/modules/indicadores/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 // REQ-018 / RN-006: tempo entre o alerta e a primeira ação, por alerta e a média.
 export function TempoAcionamentoPanel() {
@@ -80,7 +81,7 @@ function Resumo({ dados }: { dados: TempoAcionamento }) {
               <TableCell>
                 <Badge variant="secondary">{alerta.nivel}</Badge>
               </TableCell>
-              <TableCell>{alerta.variavel}</TableCell>
+              <TableCell>{rotuloVariavel(alerta.variavel)}</TableCell>
               <TableCell>{alerta.territorio}</TableCell>
               <TableCell>
                 {alerta.primeira_acao_em ? formatarDataHora(alerta.primeira_acao_em) : 'Sem ação'}

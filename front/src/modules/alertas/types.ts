@@ -10,10 +10,17 @@ export interface Alerta {
   nivel: string
   parametro: { id: number; variavel: string; limiar: number }
   territorio: string
+  /** Primeira leitura, a que disparou o alerta */
   valor_lido: number
+  /** Maior valor do incidente no parâmetro do alerta (RN-012 #4) */
+  valor_maximo: number
   fonte: string
   lida_em: string
+  /** Leitura mais recente que manteve o alerta */
+  ultima_leitura_em: string
   disparado_em: string
+  /** Quando subiu para ALTO; nulo se não escalonou (RN-012 #5) */
+  escalonado_em: string | null
   /** Nulo até o contrato do gold (DEC-009, RN-007 #2) */
   fonte_atualizada_em: string | null
   status: StatusAlerta

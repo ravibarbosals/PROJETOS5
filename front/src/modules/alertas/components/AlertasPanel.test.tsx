@@ -22,9 +22,12 @@ const alerta: Alerta = {
   parametro: { id: 3, variavel: 'chuva_1h', limiar: 50 },
   territorio: 'RPA-1',
   valor_lido: 62.5,
+  valor_maximo: 62.5,
   fonte: 'APAC',
   lida_em: '2026-10-24T13:00:00Z',
+  ultima_leitura_em: '2026-10-24T13:00:00Z',
   disparado_em: '2026-10-24T13:05:00Z',
+  escalonado_em: null,
   fonte_atualizada_em: null,
   status: 'ATIVO',
   prorrogado_ate: null,
@@ -41,6 +44,17 @@ const encerrado: Alerta = {
   motivo_encerramento: 'INVALIDADO',
 }
 
+const escalonado: Alerta = {
+  ...alerta,
+  parametro: { id: 4, variavel: 'precipitacao_mm', limiar: 60 },
+  valor_lido: 31.4,
+  valor_maximo: 72.8,
+  escalonado_em: '2026-10-24T16:05:00Z',
+  status: 'ENCERRADO',
+  encerrado_em: '2026-10-24T20:00:00Z',
+  motivo_encerramento: 'NORMALIZADO',
+}
+
 const TODAS = ['encerrar', 'prorrogar', 'invalidar'] as const
 
 function pagina(data: Alerta[]): Paginated<Alerta> {
@@ -53,14 +67,14 @@ describe('AlertasPanel (MOD-002, PR-009)', () => {
     listarMock.mockResolvedValue(pagina([alerta]))
   })
 
-  it('mostra os ativos por padrão, com leitura, limiar e horários do Recife', async () => {
+  it('mostra os ativos por padrão, com máximo, limiar e disparo no horário do Recife', async () => {
     renderWithQuery(<AlertasPanel />)
 
     const linha = (await screen.findByText('RPA-1')).closest('tr')!
     expect(within(linha).getByText('ALTO')).toBeInTheDocument()
     expect(within(linha).getByText('62,5')).toBeInTheDocument()
     expect(within(linha).getByText('/ 50')).toBeInTheDocument()
-    expect(within(linha).getByText('24/10/2026 10:05')).toBeInTheDocument()
+    expect(within(linha).getByText('24/10 10:05')).toBeInTheDocument()
     expect(listarMock).toHaveBeenCalledWith({ page: 1, status: 'ATIVO' })
   })
 
@@ -82,16 +96,60 @@ describe('AlertasPanel (MOD-002, PR-009)', () => {
     expect(await screen.findByText('Nenhum alerta encontrado.')).toBeInTheDocument()
   })
 
-  it('mostra como o alerta encerrou e até quando foi prorrogado (RN-015)', async () => {
+  it('mostra o máximo do incidente contra o limiar do nível atual (RN-012 #4, #5)', async () => {
+    listarMock.mockResolvedValue(pagina([escalonado]))
+    renderWithQuery(<AlertasPanel />)
+
+    const linha = (await screen.findByText('RPA-1')).closest('tr')!
+    expect(within(linha).getByText('Chuva (mm)')).toBeInTheDocument()
+    expect(within(linha).getByText('72,8')).toBeInTheDocument()
+    expect(within(linha).getByText('/ 60')).toBeInTheDocument()
+    expect(within(linha).queryByText(/31,4/)).not.toBeInTheDocument()
+  })
+
+  it('resume a situação numa linha: prorrogado ou como encerrou (RN-015)', async () => {
     listarMock.mockResolvedValue(
       pagina([{ ...alerta, prorrogado_ate: '2999-01-01T03:00:00Z' }, encerrado]),
     )
     renderWithQuery(<AlertasPanel />)
 
     const ativo = (await screen.findByText('RPA-1')).closest('tr')!
-    expect(within(ativo).getByText('Prorrogado até 01/01/2999 00:00')).toBeInTheDocument()
+    expect(within(ativo).getByText('Ativo · prorrogado')).toBeInTheDocument()
     const fechado = screen.getByText('RPA-2').closest('tr')!
-    expect(within(fechado).getByText('Invalidado · 24/10/2026 17:00')).toBeInTheDocument()
+    expect(within(fechado).getByText('Invalidado')).toBeInTheDocument()
+  })
+
+  it('abre o detalhe ao clicar: 1ª leitura, fonte, escalonamento e encerramento', async () => {
+    listarMock.mockResolvedValue(pagina([escalonado]))
+    renderWithQuery(<AlertasPanel />)
+
+    await userEvent.click(await screen.findByRole('row', { name: /Detalhes do alerta #10/ }))
+    const painel = screen.getByRole('dialog')
+
+    expect(within(painel).getByText('Alerta #10')).toBeInTheDocument()
+    expect(within(painel).getByText('31,4 em 24/10/2026 10:00')).toBeInTheDocument()
+    expect(within(painel).getByText('72,8 (limiar 60)')).toBeInTheDocument()
+    expect(within(painel).getByText('APAC · sem coleta registrada')).toBeInTheDocument()
+    expect(within(painel).getByText('24/10/2026 13:05')).toBeInTheDocument()
+    expect(within(painel).getByText('24/10/2026 17:00 · Normalizado')).toBeInTheDocument()
+  })
+
+  it('abre o detalhe pelo teclado', async () => {
+    renderWithQuery(<AlertasPanel />)
+
+    const linha = await screen.findByRole('row', { name: /Detalhes do alerta #10/ })
+    linha.focus()
+    await userEvent.keyboard('{Enter}')
+
+    expect(within(screen.getByRole('dialog')).getByText('Alerta #10')).toBeInTheDocument()
+  })
+
+  it('só mostra a coluna de ações quando há alerta ativo para agir', async () => {
+    listarMock.mockResolvedValue(pagina([encerrado]))
+    renderWithQuery(<AlertasPanel acoes={[...TODAS]} />)
+
+    await screen.findByText('RPA-2')
+    expect(screen.queryByRole('columnheader', { name: 'Ações' })).not.toBeInTheDocument()
   })
 
   describe('ações manuais (PER-014, PER-015)', () => {
@@ -164,6 +222,21 @@ describe('AlertasPanel (MOD-002, PR-009)', () => {
       await userEvent.click(within(dialogo).getByRole('button', { name: 'Invalidar' }))
 
       expect(agirMock).toHaveBeenCalledWith(10, 'invalidar', { motivo: 'Falha pontual da fonte' })
+    })
+
+    it('também age a partir do detalhe', async () => {
+      renderWithQuery(<AlertasPanel acoes={[...TODAS]} />)
+      await userEvent.click(await screen.findByRole('row', { name: /Detalhes do alerta #10/ }))
+      await userEvent.click(screen.getByRole('button', { name: 'Agir sobre o alerta' }))
+
+      expect(screen.getByRole('dialog', { name: 'Agir sobre o alerta #10' })).toBeInTheDocument()
+    })
+
+    it('clicar em Agir na linha não abre o detalhe', async () => {
+      const dialogo = await abrir()
+
+      expect(within(dialogo).getByText('Agir sobre o alerta #10')).toBeInTheDocument()
+      expect(screen.getAllByRole('dialog')).toHaveLength(1)
     })
 
     it('só lista as ações que o papel permite', async () => {

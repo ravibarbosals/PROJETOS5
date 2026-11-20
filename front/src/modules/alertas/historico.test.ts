@@ -41,4 +41,14 @@ describe('descreverMudancas (RN-001)', () => {
       }),
     ).toEqual(['Variável: chuva_1h', 'Nível: ALTO'])
   })
+
+  it('mostra a variável do gold com o nome legível (DEC-033)', () => {
+    expect(
+      descreverMudancas({
+        ...base,
+        operacao: 'CRIACAO',
+        valor_novo: { variavel: 'precipitacao_mm' },
+      }),
+    ).toEqual(['Variável: Chuva (mm)'])
+  })
 })

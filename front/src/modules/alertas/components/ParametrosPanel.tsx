@@ -19,6 +19,7 @@ import { HistoricoParametroDialog } from '@/modules/alertas/components/Historico
 import { ParametroFormDialog } from '@/modules/alertas/components/ParametroFormDialog'
 import { useAlterarParametro, useParametrosQuery } from '@/modules/alertas/hooks/useAlertas'
 import type { ParametroAlerta } from '@/modules/alertas/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 interface ParametrosPanelProps {
   /** PER-005: só o Gestor altera; o Técnico consulta (PER-004). */
@@ -77,7 +78,7 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
                 )}
                 {pagina.data.map((parametro) => (
                   <TableRow key={parametro.id}>
-                    <TableCell className="font-medium">{parametro.variavel}</TableCell>
+                    <TableCell className="font-medium">{rotuloVariavel(parametro.variavel)}</TableCell>
                     <TableCell>{parametro.territorio}</TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatarNumero(parametro.limiar)}
@@ -102,7 +103,7 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label={`Histórico de ${parametro.variavel} em ${parametro.territorio}`}
+                          aria-label={`Histórico de ${rotuloVariavel(parametro.variavel)} em ${parametro.territorio}`}
                           onClick={() => setEmHistorico(parametro)}
                         >
                           <History />
@@ -112,7 +113,7 @@ export function ParametrosPanel({ podeEditar }: ParametrosPanelProps) {
                             <Button
                               variant="ghost"
                               size="sm"
-                              aria-label={`Editar ${parametro.variavel} em ${parametro.territorio}`}
+                              aria-label={`Editar ${rotuloVariavel(parametro.variavel)} em ${parametro.territorio}`}
                               onClick={() => abrirFormulario(parametro)}
                             >
                               <Pencil />

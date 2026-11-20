@@ -3,6 +3,7 @@ import { Paginacao } from '@/components/Paginacao'
 import { QueryResult } from '@/components/QueryResult'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AcaoAlertaDialog } from '@/modules/alertas/components/AcaoAlertaDialog'
+import { AlertaDetalheSheet } from '@/modules/alertas/components/AlertaDetalheSheet'
 import { AlertasTable } from '@/modules/alertas/components/AlertasTable'
 import { useAlertasQuery } from '@/modules/alertas/hooks/useAlertas'
 import type { AcaoManual, Alerta, StatusAlerta } from '@/modules/alertas/types'
@@ -18,6 +19,8 @@ interface AlertasPanelProps {
 export function AlertasPanel({ acoes = [] }: AlertasPanelProps) {
   const [filtro, setFiltro] = useState<FiltroStatus>('ATIVO')
   const [emAcao, setEmAcao] = useState<Alerta>()
+  const [emDetalhe, setEmDetalhe] = useState<Alerta>()
+  const agir = acoes.length > 0 ? setEmAcao : undefined
   const [page, setPage] = useState(1)
   const query = useAlertasQuery({ page, status: filtro === 'TODOS' ? undefined : filtro })
 
@@ -40,10 +43,7 @@ export function AlertasPanel({ acoes = [] }: AlertasPanelProps) {
       <QueryResult query={query}>
         {(pagina) => (
           <>
-            <AlertasTable
-              alertas={pagina.data}
-              onAgir={acoes.length > 0 ? setEmAcao : undefined}
-            />
+            <AlertasTable alertas={pagina.data} onDetalhar={setEmDetalhe} onAgir={agir} />
             <Paginacao
               page={pagina.meta.currentPage}
               totalPages={pagina.meta.totalPages}
@@ -54,6 +54,17 @@ export function AlertasPanel({ acoes = [] }: AlertasPanelProps) {
         )}
       </QueryResult>
 
+      <AlertaDetalheSheet
+        alerta={emDetalhe}
+        onClose={() => setEmDetalhe(undefined)}
+        onAgir={
+          agir &&
+          ((alerta) => {
+            setEmDetalhe(undefined)
+            agir(alerta)
+          })
+        }
+      />
       <AcaoAlertaDialog alerta={emAcao} acoes={acoes} onClose={() => setEmAcao(undefined)} />
     </div>
   )

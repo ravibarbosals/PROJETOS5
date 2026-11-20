@@ -130,6 +130,6 @@ describe('alertaAtivoDemo (--ativo)', () => {
   });
 
   it('says in the extension reason that it is a demonstration', () => {
-      expect(ativo.acoesManuais[0].motivo).toMatch(/^Demonstração/);
-    });
+    expect(ativo.acoesManuais[0].motivo).toMatch(/^Demonstração/);
+  });
 });

@@ -1,6 +1,7 @@
 import { ClipboardCheck, Siren } from 'lucide-react'
 import { formatarDataHora, formatarNumero } from '@/lib/format'
 import type { ItemLinhaDoTempo } from '@/modules/rastreio/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 // RN-005: alertas e ações em ordem cronológica (a ordem vem do back).
 export function LinhaDoTempoLista({ itens }: { itens: ItemLinhaDoTempo[] }) {
@@ -26,7 +27,7 @@ export function LinhaDoTempoLista({ itens }: { itens: ItemLinhaDoTempo[] }) {
             {alerta ? (
               <p className="text-sm">
                 <span className="font-medium">
-                  Alerta {item.alerta.nivel} · {item.alerta.variavel} em {item.alerta.territorio}
+                  Alerta {item.alerta.nivel} · {rotuloVariavel(item.alerta.variavel)} em {item.alerta.territorio}
                 </span>
                 <span className="text-muted-foreground">
                   {' '}

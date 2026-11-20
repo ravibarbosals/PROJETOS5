@@ -13,6 +13,7 @@ import { formatarDataHora } from '@/lib/format'
 import { descreverMudancas, ROTULO_OPERACAO } from '@/modules/alertas/historico'
 import { useHistoricoQuery } from '@/modules/alertas/hooks/useAlertas'
 import type { ParametroAlerta } from '@/modules/alertas/types'
+import { rotuloVariavel } from '@/modules/leituras/variaveis'
 
 interface HistoricoParametroDialogProps {
   parametro?: ParametroAlerta
@@ -26,7 +27,7 @@ export function HistoricoParametroDialog({ parametro, onClose }: HistoricoParame
         <DialogHeader>
           <DialogTitle>Histórico do parâmetro</DialogTitle>
           <DialogDescription>
-            {parametro && `${parametro.variavel} · ${parametro.territorio}`}
+            {parametro && `${rotuloVariavel(parametro.variavel)} · ${parametro.territorio}`}
           </DialogDescription>
         </DialogHeader>
         {parametro && <ListaDoHistorico id={parametro.id} />}
