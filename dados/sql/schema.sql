@@ -175,3 +175,36 @@ INSERT INTO gold.bairro_rpa (bairro, territorio) VALUES
   ('VASCO DA GAMA', 'RPA 3 - Noroeste'),
   ('ZUMBI', 'RPA 4 - Oeste')
 ON CONFLICT (bairro) DO NOTHING;
+
+-- Mapa da EST-01 (DEC-038, TASK-071) -------------------------------------
+
+-- Limite de cada RPA em GeoJSON (MultiPolygon, longitude/latitude), gravado
+-- pela pipeline a partir de "Limites por RPA - 2023"; nulo no Recife.
+ALTER TABLE gold.territorio ADD COLUMN IF NOT EXISTS limite jsonb;
+
+-- Pontos de área de risco da Defesa Civil (dados abertos da Prefeitura; hoje
+-- só a Regional Sul). nivel nulo: ponto de lona, deslizamento, não informado.
+CREATE TABLE IF NOT EXISTS gold.area_risco (
+  id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  fonte         text         NOT NULL,
+  regional      text         NOT NULL,
+  territorio    text         NOT NULL,
+  bairro        text         NOT NULL,
+  localidade    text         NOT NULL,
+  endereco      text         NOT NULL,
+  descricao     text         NOT NULL,
+  nivel         smallint     CHECK (nivel BETWEEN 1 AND 4),
+  latitude      numeric(9,6) NOT NULL,
+  longitude     numeric(9,6) NOT NULL,
+  atualizado_em timestamptz  NOT NULL DEFAULT now()
+);
+
+-- População residente por bairro, Censo 2022 do IBGE (PR-030).
+CREATE TABLE IF NOT EXISTS gold.populacao_bairro (
+  bairro        text        PRIMARY KEY REFERENCES gold.bairro_rpa (bairro),
+  territorio    text        NOT NULL REFERENCES gold.territorio (nome),
+  populacao     integer     NOT NULL CHECK (populacao >= 0),
+  ano           smallint    NOT NULL,
+  fonte         text        NOT NULL,
+  atualizado_em timestamptz NOT NULL DEFAULT now()
+);

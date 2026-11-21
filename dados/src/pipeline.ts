@@ -5,8 +5,25 @@ import {
   listarRecursos,
   VERSAO_CONTAGEM,
 } from './coletores/arboviroses.js';
+import {
+  coletarAreasDeRisco,
+  coletarLimitesRpa,
+  coletarPopulacao,
+  FONTE_AREAS_RISCO,
+  FONTE_LIMITES_RPA,
+  FONTE_POPULACAO,
+  listarAreasDeRisco,
+  recursoDosLimites,
+  VERSAO_POPULACAO,
+  type RecursoCkan,
+} from './coletores/mapa.js';
 import { coletarOpenMeteo, type Coleta } from './coletores/openmeteo.js';
 import { montarIndicadores } from './tratamentos/arboviroses.js';
+import {
+  montarAreasDeRisco,
+  montarLimites,
+  montarPopulacao,
+} from './tratamentos/mapa.js';
 import { extrairLeituras } from './tratamentos/openmeteo.js';
 
 const UPSERT = `
@@ -66,12 +83,71 @@ async function coletarArboviroses(pool: pg.Pool): Promise<boolean> {
   return ok;
 }
 
+// Já existe coleta bem-sucedida com este valor no campo do payload?
+async function jaColetado(
+  pool: pg.Pool,
+  fonte: string,
+  campo: string,
+  valor: string,
+  recurso?: string,
+): Promise<boolean> {
+  const { rowCount } = await pool.query(
+    `SELECT 1 FROM bronze.coleta
+     WHERE fonte = $1 AND status_http = 200 AND payload->>$2 = $3
+       AND ($4::text IS NULL OR payload->>'recurso' = $4)`,
+    [fonte, campo, valor, recurso ?? null],
+  );
+  return Boolean(rowCount);
+}
+
+// DEC-038: áreas de risco, limites das RPAs e população mudam pouco. Só baixa
+// quando o portal republica o arquivo ou quando muda o censo.
+async function coletarMapa(pool: pg.Pool): Promise<boolean> {
+  let ok = true;
+  const coletarSeMudou = async (
+    fonte: string,
+    recurso: RecursoCkan,
+    coletarRecurso: (r: RecursoCkan) => Promise<Coleta>,
+  ) => {
+    if (
+      await jaColetado(pool, fonte, 'modificado_em', recurso.modificadoEm, recurso.id)
+    ) {
+      return;
+    }
+    ok = (await gravarColeta(pool, await coletarRecurso(recurso))) && ok;
+  };
+
+  try {
+    for (const recurso of await listarAreasDeRisco()) {
+      await coletarSeMudou(FONTE_AREAS_RISCO, recurso, coletarAreasDeRisco);
+    }
+  } catch (erro) {
+    console.error(`${FONTE_AREAS_RISCO}: ${String(erro)}`);
+    ok = false;
+  }
+  try {
+    await coletarSeMudou(
+      FONTE_LIMITES_RPA,
+      await recursoDosLimites(),
+      coletarLimitesRpa,
+    );
+  } catch (erro) {
+    console.error(`${FONTE_LIMITES_RPA}: ${String(erro)}`);
+    ok = false;
+  }
+  if (!(await jaColetado(pool, FONTE_POPULACAO, 'versao', VERSAO_POPULACAO))) {
+    ok = (await gravarColeta(pool, await coletarPopulacao())) && ok;
+  }
+  return ok;
+}
+
 // Chama as APIs e grava as respostas no bronze. Devolve false se alguma fonte
 // falhou.
 export async function coletar(pool: pg.Pool): Promise<boolean> {
   const openMeteo = await gravarColeta(pool, await coletarOpenMeteo());
   const arboviroses = await coletarArboviroses(pool);
-  return openMeteo && arboviroses;
+  const mapa = await coletarMapa(pool);
+  return openMeteo && arboviroses && mapa;
 }
 
 async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
@@ -202,10 +278,152 @@ async function tratarArboviroses(pool: pg.Pool): Promise<boolean> {
   }
 }
 
+// Fontes do mapa (DEC-038): com coleta nova, refaz o gold da fonte numa
+// transação a partir da coleta mais recente de cada recurso.
+async function refazerSeHouverNova(
+  pool: pg.Pool,
+  fonte: string,
+  refazer: (cliente: pg.PoolClient, payloads: unknown[]) => Promise<number>,
+): Promise<boolean> {
+  const { rows: pendentes } = await pool.query<{ id: string }>(
+    `SELECT id FROM bronze.coleta
+     WHERE fonte = $1 AND status_http = 200 AND processado_em IS NULL`,
+    [fonte],
+  );
+  if (pendentes.length === 0) return true;
+
+  const cliente = await pool.connect();
+  try {
+    await cliente.query('BEGIN');
+    const { rows: ultimas } = await cliente.query<{ payload: unknown }>(
+      `SELECT DISTINCT ON (coalesce(payload->>'recurso', '')) payload
+       FROM bronze.coleta
+       WHERE fonte = $1 AND status_http = 200
+       ORDER BY coalesce(payload->>'recurso', ''), coletado_em DESC`,
+      [fonte],
+    );
+    const linhas = await refazer(
+      cliente,
+      ultimas.map((u) => u.payload),
+    );
+    await cliente.query(
+      'UPDATE bronze.coleta SET processado_em = now() WHERE id = ANY($1)',
+      [pendentes.map((p) => p.id)],
+    );
+    await cliente.query('COMMIT');
+    console.log(`${fonte}: ${pendentes.length} coletas novas, ${linhas} linhas no gold`);
+    return true;
+  } catch (erro) {
+    await cliente.query('ROLLBACK');
+    console.error(`${fonte}: ${String(erro)}`);
+    return false;
+  } finally {
+    cliente.release();
+  }
+}
+
+// Bairro fora de gold.bairro_rpa fica no Recife (DEC-035)
+async function gravarAreasDeRisco(
+  cliente: pg.PoolClient,
+  payloads: unknown[],
+): Promise<number> {
+  const areas = montarAreasDeRisco(payloads);
+  await cliente.query('DELETE FROM gold.area_risco WHERE fonte = $1', [
+    FONTE_AREAS_RISCO,
+  ]);
+  await cliente.query(
+    `INSERT INTO gold.area_risco
+       (fonte, regional, territorio, bairro, localidade, endereco, descricao,
+        nivel, latitude, longitude)
+     SELECT $1, a.regional, coalesce(b.territorio, 'Recife'), a.bairro,
+            a.localidade, a.endereco, a.descricao, a.nivel, a.latitude,
+            a.longitude
+     FROM unnest($2::text[], $3::text[], $4::text[], $5::text[], $6::text[],
+                 $7::smallint[], $8::numeric[], $9::numeric[])
+       AS a(regional, bairro, localidade, endereco, descricao, nivel, latitude,
+            longitude)
+     LEFT JOIN gold.bairro_rpa b ON b.bairro = a.bairro`,
+    [
+      FONTE_AREAS_RISCO,
+      areas.map((a) => a.regional),
+      areas.map((a) => a.bairro),
+      areas.map((a) => a.localidade),
+      areas.map((a) => a.endereco),
+      areas.map((a) => a.descricao),
+      areas.map((a) => a.nivel),
+      areas.map((a) => a.latitude),
+      areas.map((a) => a.longitude),
+    ],
+  );
+  return areas.length;
+}
+
+// PR-030: só bairros da lista da Prefeitura; um nome desconhecido falha a
+// transação em vez de sumir com a população
+async function gravarPopulacao(
+  cliente: pg.PoolClient,
+  payloads: unknown[],
+): Promise<number> {
+  const [payload] = payloads;
+  const populacao = montarPopulacao(payload);
+  await cliente.query('DELETE FROM gold.populacao_bairro');
+  await cliente.query(
+    `INSERT INTO gold.populacao_bairro (bairro, territorio, populacao, ano, fonte)
+     SELECT p.bairro, b.territorio, p.populacao, $3, $4
+     FROM unnest($1::text[], $2::int[]) AS p(bairro, populacao)
+     JOIN gold.bairro_rpa b ON b.bairro = p.bairro`,
+    [
+      populacao.map((p) => p.bairro),
+      populacao.map((p) => p.populacao),
+      Number(VERSAO_POPULACAO),
+      FONTE_POPULACAO,
+    ],
+  );
+  const { rows } = await cliente.query<{ n: number }>(
+    'SELECT count(*)::int AS n FROM gold.populacao_bairro',
+  );
+  if (rows[0].n !== populacao.length) {
+    throw new Error(
+      `${populacao.length - rows[0].n} bairros do IBGE fora de gold.bairro_rpa`,
+    );
+  }
+  return rows[0].n;
+}
+
+async function gravarLimites(
+  cliente: pg.PoolClient,
+  payloads: unknown[],
+): Promise<number> {
+  const [payload] = payloads;
+  const limites = montarLimites(payload);
+  for (const { rpa, limite } of limites) {
+    await cliente.query('UPDATE gold.territorio SET limite = $1 WHERE rpa = $2', [
+      JSON.stringify(limite),
+      rpa,
+    ]);
+  }
+  return limites.length;
+}
+
 // Move as coletas pendentes do bronze para o gold. Devolve false se alguma
 // falhou.
 export async function tratar(pool: pg.Pool): Promise<boolean> {
   const openMeteo = await tratarOpenMeteo(pool);
   const arboviroses = await tratarArboviroses(pool);
-  return openMeteo && arboviroses;
+  const areas = await refazerSeHouverNova(
+    pool,
+    FONTE_AREAS_RISCO,
+    gravarAreasDeRisco,
+  );
+  const populacao = await refazerSeHouverNova(
+    pool,
+    FONTE_POPULACAO,
+    gravarPopulacao,
+  );
+  const limites = await refazerSeHouverNova(
+    pool,
+    FONTE_LIMITES_RPA,
+    gravarLimites,
+  );
+  return openMeteo && arboviroses && areas && populacao && limites;
 }
