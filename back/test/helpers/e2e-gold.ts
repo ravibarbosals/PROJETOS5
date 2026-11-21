@@ -11,6 +11,14 @@ interface DadosLeitura {
   lidaEm: Date;
 }
 
+interface DadosAreaRisco {
+  territorio: string;
+  bairro: string;
+  nivel: number | null;
+  latitude: number;
+  longitude: number;
+}
+
 interface DadosIndicador {
   bairro: string;
   indicador: string;
@@ -24,6 +32,9 @@ export async function limparGold(app: AppE2e) {
   const fonte = app.get(DataSource);
   await fonte.query('DELETE FROM gold.leitura_climatica');
   await fonte.query('DELETE FROM gold.indicador_territorio');
+  await fonte.query('DELETE FROM gold.area_risco');
+  await fonte.query('DELETE FROM gold.populacao_bairro');
+  await fonte.query('UPDATE gold.territorio SET limite = NULL');
   await fonte.query('DELETE FROM bronze.coleta');
 }
 
@@ -61,4 +72,45 @@ export async function inserirIndicador(app: AppE2e, dados: DadosIndicador) {
        VALUES ('recife_arboviroses', 'Recife', $1, $2, $3, $4)`,
     [dados.bairro, dados.indicador, dados.periodo, dados.valor],
   );
+}
+
+export async function inserirAreaRisco(app: AppE2e, dados: DadosAreaRisco) {
+  await app.get(DataSource).query(
+    `INSERT INTO gold.area_risco
+       (fonte, regional, territorio, bairro, localidade, endereco, descricao,
+        nivel, latitude, longitude)
+     VALUES ('recife_areas_risco', 'Sul', $1, $2, 'Localidade E2E',
+             'Rua E2E, 1', 'Área de Risco E2E', $3, $4, $5)`,
+    [
+      dados.territorio,
+      dados.bairro,
+      dados.nivel,
+      dados.latitude,
+      dados.longitude,
+    ],
+  );
+}
+
+// O bairro precisa existir em gold.bairro_rpa (o schema da pipeline já traz
+// os 94 do Recife)
+export async function inserirPopulacao(
+  app: AppE2e,
+  bairro: string,
+  populacao: number,
+) {
+  await app.get(DataSource).query(
+    `INSERT INTO gold.populacao_bairro (bairro, territorio, populacao, ano, fonte)
+     SELECT bairro, territorio, $2, 2022, 'ibge_populacao'
+     FROM gold.bairro_rpa WHERE bairro = $1`,
+    [bairro, populacao],
+  );
+}
+
+export async function gravarLimite(app: AppE2e, rpa: number, limite: object) {
+  await app
+    .get(DataSource)
+    .query('UPDATE gold.territorio SET limite = $1 WHERE rpa = $2', [
+      JSON.stringify(limite),
+      rpa,
+    ]);
 }

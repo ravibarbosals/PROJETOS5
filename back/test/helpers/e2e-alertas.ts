@@ -9,6 +9,8 @@ import type { AppE2e } from './e2e-app';
 interface DadosAlerta {
   disparadoEm: Date;
   territorio?: string;
+  /** Padrão: chuva_1h; outra variável permite 2 alertas ativos no território */
+  variavel?: string;
   nivel?: NivelAlerta;
   status?: StatusAlerta;
   motivoEncerramento?: MotivoEncerramento;
@@ -27,7 +29,7 @@ export async function criarAlerta(
   const territorio = dados.territorio ?? `E2E-${++sequencia}`;
   const nivel = dados.nivel ?? NivelAlerta.Alto;
   const parametro = await fonte.getRepository(ParametroAlerta).save({
-    variavel: 'chuva_1h',
+    variavel: dados.variavel ?? 'chuva_1h',
     territorio,
     limiar: 50,
     limiarSaida: 20,
