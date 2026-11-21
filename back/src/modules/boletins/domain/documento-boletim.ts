@@ -1,3 +1,7 @@
+import type {
+  LeituraPontual,
+  ResumoMeteorologico,
+} from '@/modules/boletins/domain/resumo-meteorologico';
 import {
   ORDEM_SECOES,
   SecaoBoletim,
@@ -31,6 +35,8 @@ export interface AcaoBoletim {
 export interface DadosBoletim {
   geradoEm: Date;
   acoes: AcaoBoletim[];
+  /** Nulo sem leituras nas últimas 24 h (TASK-032) */
+  meteorologia?: ResumoMeteorologico | null;
 }
 
 // PR-022 b.
@@ -56,6 +62,15 @@ const SEM_ORIGEM_DEFINIDA =
   'Conteúdo indisponível: a origem deste conteúdo ainda não foi definida.';
 const SEM_ABRIGOS =
   'Informações de abrigos ainda não estão disponíveis no sistema.';
+const SEM_LEITURAS =
+  'Sem leituras meteorológicas do Recife nas últimas 24 horas.';
+
+// Nome da fonte para quem lê o boletim; o Open-Meteo é modelo, não estação.
+const NOME_FONTE: Record<string, string> = {
+  openmeteo: 'Open-Meteo (modelo meteorológico)',
+};
+
+const numero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', {
   timeZone: 'America/Recife',
@@ -70,6 +85,39 @@ export function formatarDataHora(data: Date): string {
 // Ordem da RN-009 #1; uma seção repetida entra uma vez só (PR-022 d).
 export function ordenarSecoes(secoes: readonly SecaoBoletim[]): SecaoBoletim[] {
   return ORDEM_SECOES.filter((secao) => secoes.includes(secao));
+}
+
+function pontual(leitura: LeituraPontual | null, unidade: string): string {
+  return leitura
+    ? `${numero.format(leitura.valor)} ${unidade} (${formatarDataHora(leitura.lidaEm)})`
+    : 'sem leitura';
+}
+
+// TASK-032: os números dos cartões da EST-01 (PR-013) e a fonte (REQ-019).
+function blocosDaMeteorologia(
+  resumo: ResumoMeteorologico | null | undefined,
+): BlocoBoletim[] {
+  if (!resumo) return [{ tipo: 'aviso', texto: SEM_LEITURAS }];
+  const acumulada =
+    resumo.chuvaAcumulada === null
+      ? 'sem leitura'
+      : `${numero.format(resumo.chuvaAcumulada)} mm`;
+  const fontes = resumo.fontes.map((f) => NOME_FONTE[f] ?? f).join(', ');
+  const atualizada = resumo.atualizadaEm
+    ? `atualizada em ${formatarDataHora(resumo.atualizadaEm)}`
+    : 'sem coleta registrada';
+  return [
+    {
+      tipo: 'lista',
+      itens: [
+        `Chuva acumulada (últimas 24 h): ${acumulada}`,
+        `Chuva na última hora: ${pontual(resumo.chuvaUltimaHora, 'mm')}`,
+        `Temperatura máxima (últimas 24 h): ${pontual(resumo.temperaturaMaxima, '°C')}`,
+        `Umidade atual: ${pontual(resumo.umidadeAtual, '%')}`,
+      ],
+    },
+    { tipo: 'paragrafo', texto: `Fonte: ${fontes} · ${atualizada}` },
+  ];
 }
 
 function descreverAcao(acao: AcaoBoletim): string {
@@ -91,6 +139,7 @@ function blocosDaSecao(
         },
       ];
     case SecaoBoletim.Meteorologia:
+      return blocosDaMeteorologia(dados.meteorologia);
     case SecaoBoletim.Rios:
       return [{ tipo: 'aviso', texto: SEM_DADOS_INTEGRADOS }];
     case SecaoBoletim.RiscosSaude:

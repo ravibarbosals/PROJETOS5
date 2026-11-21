@@ -3,6 +3,11 @@ import { Papel } from '@/modules/acesso/enums/papel.enum';
 import { criarAlerta, registrarAcaoEm } from './helpers/e2e-alertas';
 import { type AppE2e, criarAppE2e, limparBanco } from './helpers/e2e-app';
 import { camposInvalidos, esperarErro } from './helpers/e2e-erro';
+import {
+  inserirLeitura,
+  limparGold,
+  registrarColeta,
+} from './helpers/e2e-gold';
 import { logado } from './helpers/e2e-usuarios';
 
 const HORA_MS = 60 * 60_000;
@@ -22,6 +27,7 @@ describe('Boletins (e2e)', () => {
 
   beforeEach(async () => {
     await limparBanco(app);
+    await limparGold(app);
     comunicacao = await logado(app, [Papel.Comunicacao]);
   });
 
@@ -73,6 +79,56 @@ describe('Boletins (e2e)', () => {
     );
     expect(html).not.toContain('<script>');
     expect(html).not.toContain('Ação antiga');
+  });
+
+  it('fills the weather section from the gold of the last 24 h (TASK-032)', async () => {
+    const agora = Date.now();
+    const hora = (h: number) =>
+      new Date(Math.floor(agora / HORA_MS) * HORA_MS - h * HORA_MS);
+    await inserirLeitura(app, {
+      variavel: 'precipitacao_mm',
+      valor: 1.5,
+      lidaEm: hora(2),
+    });
+    await inserirLeitura(app, {
+      variavel: 'precipitacao_mm',
+      valor: 0.5,
+      lidaEm: hora(1),
+    });
+    await inserirLeitura(app, {
+      variavel: 'precipitacao_mm',
+      valor: 9,
+      lidaEm: hora(30),
+    });
+    await inserirLeitura(app, {
+      variavel: 'temperatura_c',
+      valor: 31.4,
+      lidaEm: hora(3),
+    });
+    await registrarColeta(app, 'openmeteo', new Date(agora - 10 * 60_000));
+
+    const html = (
+      await previa({ secoes: ['meteorologia', 'rios'] }).expect(200)
+    ).text;
+
+    expect(html).toContain('Chuva acumulada (últimas 24 h): 2 mm');
+    expect(html).toContain('Chuva na última hora: 0,5 mm');
+    expect(html).toContain('Temperatura máxima (últimas 24 h): 31,4 °C');
+    expect(html).toContain('Umidade atual: sem leitura');
+    expect(html).toContain(
+      'Fonte: Open-Meteo (modelo meteorológico) · atualizada em',
+    );
+    expect(html).toContain(
+      'Conteúdo indisponível: estes dados ainda não estão integrados ao sistema.',
+    );
+  });
+
+  it('says so when the gold has no reading in the last 24 h (TASK-032)', async () => {
+    const html = (await previa({ secoes: ['meteorologia'] }).expect(200)).text;
+
+    expect(html).toContain(
+      'Sem leituras meteorológicas do Recife nas últimas 24 horas.',
+    );
   });
 
   it('generates the PDF named after the date (RN-009 #4, DEC-019)', async () => {

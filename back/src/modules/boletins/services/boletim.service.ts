@@ -9,23 +9,30 @@ import {
   montarDocumentoBoletim,
 } from '@/modules/boletins/domain/documento-boletim';
 import { renderizarHtml } from '@/modules/boletins/domain/renderizar-html';
+import { resumirMeteorologia } from '@/modules/boletins/domain/resumo-meteorologico';
 import {
   definicaoPdf,
   nomeDoArquivo,
 } from '@/modules/boletins/domain/renderizar-pdf';
 import { SecaoBoletim } from '@/modules/boletins/enums/secao-boletim.enum';
+import { PeriodoPainel } from '@/modules/paineis/leitura/enums/periodo-painel.enum';
+import { LeituraService } from '@/modules/paineis/leitura/services/leitura.service';
 import { Acao } from '@/modules/rastreio-operacional/entities/acao.entity';
+
+// PR-006: o boletim é do município do Recife.
+const TERRITORIO = 'Recife';
 
 export interface ArquivoPdf {
   nome: string;
   conteudo: Buffer;
 }
 
-// RN-009. As seções do gold (meteorologia, rios) chegam com a TASK-032.
+// RN-009. Meteorologia vem do gold (TASK-032); rios ainda não têm fonte.
 @Injectable()
 export class BoletimService {
   constructor(
     @InjectRepository(Acao) private readonly acoes: Repository<Acao>,
+    private readonly leituras: LeituraService,
   ) {}
 
   async montar(
@@ -35,7 +42,19 @@ export class BoletimService {
     const acoes = secoes.includes(SecaoBoletim.AcoesAbrigos)
       ? await this.acoesEmCurso(agora)
       : [];
-    return montarDocumentoBoletim(secoes, { geradoEm: agora, acoes });
+    const meteorologia = secoes.includes(SecaoBoletim.Meteorologia)
+      ? resumirMeteorologia(
+          await this.leituras.listar(
+            { periodo: PeriodoPainel.Ultimas24Horas, territorio: TERRITORIO },
+            agora,
+          ),
+        )
+      : null;
+    return montarDocumentoBoletim(secoes, {
+      geradoEm: agora,
+      acoes,
+      meteorologia,
+    });
   }
 
   async preVisualizar(

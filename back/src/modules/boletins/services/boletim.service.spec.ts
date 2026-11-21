@@ -2,6 +2,9 @@ import { MoreThanOrEqual, type Repository } from 'typeorm';
 import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { SecaoBoletim } from '@/modules/boletins/enums/secao-boletim.enum';
 import { BoletimService } from '@/modules/boletins/services/boletim.service';
+import { VariavelClimatica } from '@/modules/paineis/leitura/enums/variavel-climatica.enum';
+import { PeriodoPainel } from '@/modules/paineis/leitura/enums/periodo-painel.enum';
+import type { LeituraService } from '@/modules/paineis/leitura/services/leitura.service';
 import { Acao } from '@/modules/rastreio-operacional/entities/acao.entity';
 
 const AGORA = new Date('2026-11-02T12:00:00.000Z');
@@ -15,10 +18,24 @@ const ACAO = Object.assign(new Acao(), {
   dthrCriacao: new Date('2026-11-02T10:20:00Z'),
 });
 
+const LEITURA = {
+  fonte: 'openmeteo',
+  estacao: 'recife',
+  territorio: 'Recife',
+  variavel: VariavelClimatica.Precipitacao,
+  valor: 1.2,
+  lida_em: new Date('2026-11-02T11:00:00Z'),
+  fonte_atualizada_em: new Date('2026-11-02T11:41:00Z'),
+};
+
 function setup() {
   const acoes = { find: jest.fn().mockResolvedValue([ACAO]) };
-  const service = new BoletimService(acoes as unknown as Repository<Acao>);
-  return { service, acoes };
+  const leituras = { listar: jest.fn().mockResolvedValue([LEITURA]) };
+  const service = new BoletimService(
+    acoes as unknown as Repository<Acao>,
+    leituras as unknown as LeituraService,
+  );
+  return { service, acoes, leituras };
 }
 
 describe('BoletimService (RN-009)', () => {
@@ -40,8 +57,25 @@ describe('BoletimService (RN-009)', () => {
     });
   });
 
-  it('does not query actions when the section is not chosen', async () => {
-    const { service, acoes } = setup();
+  it('reads the last 24 h of Recife from the gold for the weather (TASK-032, PR-006)', async () => {
+    const { service, leituras } = setup();
+
+    const documento = await service.montar([SecaoBoletim.Meteorologia], AGORA);
+
+    expect(leituras.listar).toHaveBeenCalledWith(
+      { periodo: PeriodoPainel.Ultimas24Horas, territorio: 'Recife' },
+      AGORA,
+    );
+    expect(documento.secoes[0].blocos[0]).toMatchObject({
+      tipo: 'lista',
+      itens: expect.arrayContaining([
+        'Chuva acumulada (últimas 24 h): 1,2 mm',
+      ]) as string[],
+    });
+  });
+
+  it('does not query actions nor readings when the sections are not chosen', async () => {
+    const { service, acoes, leituras } = setup();
 
     const documento = await service.montar(
       [SecaoBoletim.Rios, SecaoBoletim.Cabecalho],
@@ -49,6 +83,7 @@ describe('BoletimService (RN-009)', () => {
     );
 
     expect(acoes.find).not.toHaveBeenCalled();
+    expect(leituras.listar).not.toHaveBeenCalled();
     expect(documento.geradoEm).toBe(AGORA);
     expect(documento.secoes.map((s) => s.secao)).toEqual([
       SecaoBoletim.Cabecalho,

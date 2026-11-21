@@ -14,6 +14,6 @@ import { LeituraService } from '@/modules/paineis/leitura/services/leitura.servi
     IndicadorTerritorioController,
   ],
   providers: [LeituraService, FonteStatusService, IndicadorTerritorioService],
-  exports: [FonteStatusService],
+  exports: [FonteStatusService, LeituraService],
 })
 export class PaineisModule {}
