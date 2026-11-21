@@ -33,6 +33,20 @@ Entre no front com o `ADMIN_EMAIL` e a `ADMIN_SENHA` do `.env`. O seed é idempo
 
 Para parar: `docker compose down`. Os dados ficam no volume `pg-data`; `docker compose down -v` apaga tudo.
 
+### Dados de demonstração
+
+Para apresentar o sistema, `npm run seed:demo` cria 4 usuários (`tecnico`, `gestor`, `gestao` e `comunicacao`, todos `@demo.vigia.local`, com a senha `DEMO_SENHA` do `.env`), parâmetros de chuva e calor e um mês de alertas encerrados com ações. Os valores são ilustrativos e as datas, relativas a hoje. Só roda no Postgres local, nunca no Neon, e só num banco sem parâmetros. Rodar de novo não duplica nada.
+
+No dia da apresentação, `npm run seed:demo -- --ativo` acrescenta um alerta de chuva ATIVO, prorrogado por 8 horas. Depois disso o job de alertas o encerra sozinho.
+
+Com o sistema no compose, rode pelo container da API, que já aponta para o banco do compose:
+
+```bash
+docker compose exec api node dist/infrastructure/database/seed-demo.cli.js --ativo
+```
+
+`docker compose down -v` apaga o volume do banco e, com ele, os usuários de demonstração; depois de subir de novo, rode o seed outra vez.
+
 ### Desenvolvimento
 
 Para rodar a API fora do Docker, com recarga automática, deixe só o banco no compose:
@@ -94,5 +108,3 @@ Todo erro responde em JSON:
 { "status_code": 409, "error": "Conflict", "message": "Já existe um usuário com este e-mail",
   "business_rule_code": "EMAIL_JA_CADASTRADO", "timestamp": "...", "path": "/usuarios" }
 ```
-
-Dados inválidos respondem 422, com `message: "Dados inválidos"` e o detalhe por campo em `errors`.
