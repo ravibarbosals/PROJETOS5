@@ -7,9 +7,10 @@ const leitura = (
   valor: number,
   lida_em: string,
   fonte_atualizada_em: string | null = '2026-11-18T13:42:00Z',
+  estacao = 'recife',
 ): Leitura => ({
   fonte: 'openmeteo',
-  estacao: 'recife',
+  estacao,
   territorio: 'Recife',
   variavel,
   valor,
@@ -44,6 +45,31 @@ describe('resumirLeituras (PR-013)', () => {
       temperaturaMaxima: null,
       umidadeAtual: null,
     })
+  })
+})
+
+describe('várias estações: vale a de maior valor (DEC-034)', () => {
+  const ATUALIZADA = '2026-11-18T13:42:00Z'
+  const rpas = [
+    leitura('precipitacao_mm', 3, '2026-11-18T10:00:00Z', ATUALIZADA, 'rpa1'),
+    leitura('precipitacao_mm', 1, '2026-11-18T11:00:00Z', ATUALIZADA, 'rpa1'),
+    leitura('precipitacao_mm', 2, '2026-11-18T10:00:00Z', ATUALIZADA, 'rpa6'),
+    leitura('precipitacao_mm', 5, '2026-11-18T11:00:00Z', ATUALIZADA, 'rpa6'),
+    leitura('umidade_pct', 70, '2026-11-18T11:00:00Z', ATUALIZADA, 'rpa1'),
+    leitura('umidade_pct', 88, '2026-11-18T11:00:00Z', ATUALIZADA, 'rpa6'),
+  ]
+
+  it('nos cartões, o maior acumulado e a maior leitura da hora mais recente', () => {
+    expect(resumirLeituras(rpas)).toMatchObject({
+      chuvaAcumulada: 7,
+      chuvaUltimaHora: { valor: 5, lida_em: '2026-11-18T11:00:00Z' },
+      umidadeAtual: { valor: 88, lida_em: '2026-11-18T11:00:00Z' },
+    })
+  })
+
+  it('no gráfico, a estação de mais chuva em cada barra, por hora e por dia', () => {
+    expect(serieDoGrafico(rpas, '24h').map((p) => p.chuva)).toEqual([3, 5])
+    expect(serieDoGrafico(rpas, '30d').map((p) => p.chuva)).toEqual([7])
   })
 })
 

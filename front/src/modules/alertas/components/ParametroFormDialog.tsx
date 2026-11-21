@@ -16,14 +16,12 @@ import { describeApiError } from '@/lib/http'
 import { useAlterarParametro, useCriarParametro } from '@/modules/alertas/hooks/useAlertas'
 import type { NivelAlerta, ParametroAlerta } from '@/modules/alertas/types'
 import { VARIAVEIS, rotuloVariavel } from '@/modules/leituras/variaveis'
+import { useNomesDeTerritorio } from '@/modules/territorios/hooks/useTerritorios'
+import { TERRITORIO_PADRAO } from '@/modules/territorios/types'
 
 // MOD-002: só variáveis do gold. Texto livre deixava cadastrar uma variável
 // que nunca dispara.
 const VARIAVEIS_GOLD: string[] = VARIAVEIS
-
-// Territórios com leitura no gold. A granularidade (bairro, RPA) ainda está em
-// aberto (DUV-009); hoje a pipeline só grava o Recife inteiro.
-const TERRITORIOS_GOLD = ['Recife']
 
 // RN-012: só a chuva é somada na janela; nas outras vale a leitura da hora.
 const VARIAVEL_ACUMULADA = 'precipitacao_mm'
@@ -74,7 +72,9 @@ function lerJanela(texto: string): number | null {
 
 function ParametroForm({ parametro, onDone }: { parametro?: ParametroAlerta; onDone: () => void }) {
   const [variavel, setVariavel] = useState(parametro?.variavel ?? VARIAVEIS_GOLD[0])
-  const [territorio, setTerritorio] = useState(parametro?.territorio ?? TERRITORIOS_GOLD[0])
+  const [territorio, setTerritorio] = useState(parametro?.territorio ?? TERRITORIO_PADRAO)
+  // Recife e RPAs do catálogo do gold (DEC-035); a API recusa outro nome.
+  const catalogo = useNomesDeTerritorio()
   const [limiar, setLimiar] = useState(parametro ? numeroParaCampo(parametro.limiar) : '')
   const [limiarSaida, setLimiarSaida] = useState(
     parametro ? numeroParaCampo(parametro.limiar_saida) : '',
@@ -98,9 +98,7 @@ function ParametroForm({ parametro, onDone }: { parametro?: ParametroAlerta; onD
 
   // A edição mostra a variável e o território do parâmetro mesmo fora da lista.
   const variaveis = VARIAVEIS_GOLD.includes(variavel) ? VARIAVEIS_GOLD : [variavel, ...VARIAVEIS_GOLD]
-  const territorios = TERRITORIOS_GOLD.includes(territorio)
-    ? TERRITORIOS_GOLD
-    : [territorio, ...TERRITORIOS_GOLD]
+  const territorios = catalogo.includes(territorio) ? catalogo : [territorio, ...catalogo]
 
   const podeSalvar =
     limiarLido !== null &&

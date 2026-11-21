@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Paginated } from '@/lib/pagination'
@@ -10,13 +10,19 @@ import {
   listarParametros,
 } from '@/modules/alertas/service/alertas.service'
 import type { HistoricoParametro, ParametroAlerta } from '@/modules/alertas/types'
+import { listarTerritorios } from '@/modules/territorios/service/territorios.service'
 import { renderWithQuery } from '@/test/render'
+import { TERRITORIOS } from '@/test/territorios'
 
 vi.mock('@/modules/alertas/service/alertas.service', () => ({
   listarParametros: vi.fn(),
   listarHistorico: vi.fn(),
   criarParametro: vi.fn(),
   alterarParametro: vi.fn(),
+}))
+
+vi.mock('@/modules/territorios/service/territorios.service', () => ({
+  listarTerritorios: vi.fn(),
 }))
 
 const listarMock = vi.mocked(listarParametros)
@@ -44,6 +50,7 @@ describe('ParametrosPanel', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     listarMock.mockResolvedValue(pagina([parametro]))
+    vi.mocked(listarTerritorios).mockResolvedValue(TERRITORIOS)
   })
 
   it('o Técnico só consulta: sem criar, editar ou inativar (PER-004)', async () => {
@@ -103,7 +110,9 @@ describe('ParametrosPanel', () => {
         .getAllByRole('option')
         .map((o) => o.textContent),
     ).toEqual(['Chuva (mm)', 'Temperatura (°C)', 'Umidade (%)', 'Pressão (hPa)'])
-    expect(opcoes('Território')).toEqual(['Recife'])
+    // DEC-035: o catálogo do gold, o Recife primeiro.
+    await waitFor(() => expect(opcoes('Território')).toHaveLength(7))
+    expect(opcoes('Território')).toEqual(TERRITORIOS.map((t) => t.nome))
     expect(opcoes('Nível')).toEqual(['MODERADO', 'ALTO'])
   })
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { CloudRain, Droplets, Thermometer, Umbrella } from 'lucide-react'
 import { PeriodoTabs } from '@/components/PeriodoTabs'
 import { QueryResult } from '@/components/QueryResult'
+import { SelectField } from '@/components/SelectField'
 import { StatCard } from '@/components/StatCard'
 import { formatarDataHora, formatarNumero } from '@/lib/format'
 import { PERIODOS, type Periodo } from '@/lib/periodo'
@@ -14,15 +15,30 @@ import {
   type LeituraPontual,
 } from '@/modules/leituras/resumo'
 import type { Leitura } from '@/modules/leituras/types'
+import { useNomesDeTerritorio } from '@/modules/territorios/hooks/useTerritorios'
+import { TERRITORIO_PADRAO } from '@/modules/territorios/types'
 
-// REQ-008 (parte meteorológica): cartões da PR-013 e gráfico do período.
+// REQ-008 (parte meteorológica): cartões da PR-013 e gráfico do período, do
+// Recife inteiro ou de uma RPA (DEC-035).
 export function LeiturasClimaticasPanel() {
   const [periodo, setPeriodo] = useState<Periodo>('24h')
-  const query = useLeiturasQuery(periodo)
+  const [territorio, setTerritorio] = useState(TERRITORIO_PADRAO)
+  const territorios = useNomesDeTerritorio()
+  const query = useLeiturasQuery(periodo, territorio)
 
   return (
     <div className="grid gap-4">
-      <PeriodoTabs value={periodo} onChange={setPeriodo} />
+      <div className="flex flex-wrap items-end gap-4">
+        <PeriodoTabs value={periodo} onChange={setPeriodo} />
+        <div className="w-56">
+          <SelectField
+            label="Território"
+            value={territorio}
+            onChange={(e) => setTerritorio(e.target.value)}
+            options={territorios.map((t) => ({ valor: t, rotulo: t }))}
+          />
+        </div>
+      </div>
       <QueryResult query={query}>
         {(leituras) => <Painel leituras={leituras} periodo={periodo} />}
       </QueryResult>
