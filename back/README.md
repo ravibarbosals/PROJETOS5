@@ -108,3 +108,5 @@ Todo erro responde em JSON:
 { "status_code": 409, "error": "Conflict", "message": "Já existe um usuário com este e-mail",
   "business_rule_code": "EMAIL_JA_CADASTRADO", "timestamp": "...", "path": "/usuarios" }
 ```
+
+Dados inválidos respondem 422, com `message: "Dados inválidos"` e o detalhe por campo em `errors`.
