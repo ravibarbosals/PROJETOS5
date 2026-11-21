@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { cleanup, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AxiosError } from 'axios'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -96,5 +96,52 @@ describe('LoginForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Não foi possível conectar ao servidor',
     )
+  })
+
+  it('mostra e oculta a senha', async () => {
+    setup()
+    const senha = screen.getByLabelText('Senha')
+    expect(senha).toHaveAttribute('type', 'password')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mostrar senha' }))
+    expect(senha).toHaveAttribute('type', 'text')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ocultar senha' }))
+    expect(senha).toHaveAttribute('type', 'password')
+  })
+
+  it('lembra só o e-mail quando marcado, e o traz de volta', async () => {
+    loginMock.mockResolvedValue({ access_token: 'jwt', usuario })
+    const primeiro = setup()
+
+    await userEvent.click(screen.getByLabelText('Lembrar meu e-mail'))
+    await preencherEEnviar()
+
+    expect(primeiro.onSuccess).toHaveBeenCalled()
+    expect(Object.values(localStorage).join()).not.toContain('senha-forte-1')
+    primeiro.client.clear()
+    cleanup()
+    setup()
+    expect(screen.getByLabelText('E-mail')).toHaveValue('marcos@exemplo.gov.br')
+    expect(screen.getByLabelText('Lembrar meu e-mail')).toBeChecked()
+  })
+
+  it('esquece o e-mail quando entra com a caixa desmarcada', async () => {
+    localStorage.setItem('vigia.email-lembrado', 'antigo@exemplo.gov.br')
+    loginMock.mockResolvedValue({ access_token: 'jwt', usuario })
+    setup()
+
+    await userEvent.click(screen.getByLabelText('Lembrar meu e-mail'))
+    await userEvent.clear(screen.getByLabelText('E-mail'))
+    await preencherEEnviar()
+
+    expect(localStorage.getItem('vigia.email-lembrado')).toBeNull()
+  })
+
+  it('não oferece cadastro: a senha esquecida é com o administrador (PR-020)', () => {
+    setup()
+
+    expect(screen.queryByText(/criar conta/i)).toBeNull()
+    expect(screen.getByText('Esqueceu a senha? Fale com o administrador.')).toBeInTheDocument()
   })
 })
