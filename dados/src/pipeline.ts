@@ -18,6 +18,11 @@ import {
   type RecursoCkan,
 } from './coletores/mapa.js';
 import { coletarOpenMeteo, type Coleta } from './coletores/openmeteo.js';
+import {
+  coletarClimaHistorico,
+  FONTE_CLIMA_HISTORICO,
+  janelaDoHistorico,
+} from './coletores/openmeteo-historico.js';
 import { montarIndicadores } from './tratamentos/arboviroses.js';
 import {
   montarAreasDeRisco,
@@ -25,6 +30,7 @@ import {
   montarPopulacao,
 } from './tratamentos/mapa.js';
 import { extrairLeituras } from './tratamentos/openmeteo.js';
+import { extrairDias } from './tratamentos/openmeteo-historico.js';
 
 const UPSERT = `
   INSERT INTO gold.leitura_climatica
@@ -141,13 +147,41 @@ async function coletarMapa(pool: pg.Pool): Promise<boolean> {
   return ok;
 }
 
+// DEC-042: clima diário do histórico do Open-Meteo para o modelo preditivo,
+// nos anos que as arboviroses cobrem (janelaDoHistorico decide o trecho).
+async function coletarHistorico(pool: pg.Pool): Promise<boolean> {
+  const { rows } = await pool.query<{
+    primeiro_ano: number | null;
+    carregado_desde: string | null;
+    ultima_coleta_em: Date | null;
+  }>(
+    `SELECT
+       (SELECT min(left(periodo, 4))::int FROM gold.indicador_territorio)
+         AS primeiro_ano,
+       (SELECT min(payload->>'inicio') FROM bronze.coleta
+        WHERE fonte = $1 AND status_http = 200) AS carregado_desde,
+       (SELECT max(coletado_em) FROM bronze.coleta
+        WHERE fonte = $1 AND status_http = 200) AS ultima_coleta_em`,
+    [FONTE_CLIMA_HISTORICO],
+  );
+  const janela = janelaDoHistorico({
+    primeiroAno: rows[0].primeiro_ano,
+    carregadoDesde: rows[0].carregado_desde,
+    ultimaColetaEm: rows[0].ultima_coleta_em,
+    agora: new Date(),
+  });
+  if (!janela) return true;
+  return gravarColeta(pool, await coletarClimaHistorico(janela));
+}
+
 // Chama as APIs e grava as respostas no bronze. Devolve false se alguma fonte
 // falhou.
 export async function coletar(pool: pg.Pool): Promise<boolean> {
   const openMeteo = await gravarColeta(pool, await coletarOpenMeteo());
   const arboviroses = await coletarArboviroses(pool);
   const mapa = await coletarMapa(pool);
-  return openMeteo && arboviroses && mapa;
+  const historico = await coletarHistorico(pool);
+  return openMeteo && arboviroses && mapa && historico;
 }
 
 async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
@@ -405,6 +439,65 @@ async function gravarLimites(
   return limites.length;
 }
 
+// Uma coleta mais nova revisa os dias que já existiam (DEC-042). Um INSERT só,
+// com uma lista por coluna.
+const UPSERT_CLIMA_DIARIO = `
+  INSERT INTO gold.clima_diario
+    (fonte, estacao, territorio, dia, chuva_mm, temp_media_c, temp_min_c,
+     temp_max_c, umidade_media_pct)
+  SELECT * FROM unnest($1::text[], $2::text[], $3::text[], $4::date[],
+                       $5::numeric[], $6::numeric[], $7::numeric[],
+                       $8::numeric[], $9::numeric[])
+  ON CONFLICT (fonte, estacao, dia) DO UPDATE SET
+    chuva_mm = EXCLUDED.chuva_mm,
+    temp_media_c = EXCLUDED.temp_media_c,
+    temp_min_c = EXCLUDED.temp_min_c,
+    temp_max_c = EXCLUDED.temp_max_c,
+    umidade_media_pct = EXCLUDED.umidade_media_pct,
+    atualizado_em = now()`;
+
+async function tratarClimaHistorico(pool: pg.Pool): Promise<boolean> {
+  const { rows: coletas } = await pool.query<{ id: string; payload: unknown }>(
+    `SELECT id, payload FROM bronze.coleta
+     WHERE fonte = $1 AND status_http = 200 AND processado_em IS NULL
+     ORDER BY coletado_em`,
+    [FONTE_CLIMA_HISTORICO],
+  );
+
+  let ok = true;
+  for (const coleta of coletas) {
+    const cliente = await pool.connect();
+    try {
+      await cliente.query('BEGIN');
+      const dias = extrairDias(coleta.payload);
+      await cliente.query(UPSERT_CLIMA_DIARIO, [
+        dias.map((d) => d.fonte),
+        dias.map((d) => d.estacao),
+        dias.map((d) => d.territorio),
+        dias.map((d) => d.dia),
+        dias.map((d) => d.chuvaMm),
+        dias.map((d) => d.tempMediaC),
+        dias.map((d) => d.tempMinC),
+        dias.map((d) => d.tempMaxC),
+        dias.map((d) => d.umidadeMediaPct),
+      ]);
+      await cliente.query(
+        'UPDATE bronze.coleta SET processado_em = now() WHERE id = $1',
+        [coleta.id],
+      );
+      await cliente.query('COMMIT');
+      console.log(`coleta ${coleta.id}: ${dias.length} dias de clima`);
+    } catch (erro) {
+      await cliente.query('ROLLBACK');
+      console.error(`coleta ${coleta.id}: ${String(erro)}`);
+      ok = false;
+    } finally {
+      cliente.release();
+    }
+  }
+  return ok;
+}
+
 // Move as coletas pendentes do bronze para o gold. Devolve false se alguma
 // falhou.
 export async function tratar(pool: pg.Pool): Promise<boolean> {
@@ -425,5 +518,8 @@ export async function tratar(pool: pg.Pool): Promise<boolean> {
     FONTE_LIMITES_RPA,
     gravarLimites,
   );
-  return openMeteo && arboviroses && areas && populacao && limites;
+  const historico = await tratarClimaHistorico(pool);
+  return (
+    openMeteo && arboviroses && areas && populacao && limites && historico
+  );
 }

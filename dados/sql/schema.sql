@@ -208,3 +208,23 @@ CREATE TABLE IF NOT EXISTS gold.populacao_bairro (
   fonte         text        NOT NULL,
   atualizado_em timestamptz NOT NULL DEFAULT now()
 );
+
+-- Módulo preditivo (DEC-039, DEC-041, DEC-042) ------------------------------
+
+-- Clima por dia (dia local do Recife) e RPA, da API histórica do Open-Meteo.
+-- Entrada do modelo de arboviroses; os alertas e as telas continuam em
+-- gold.leitura_climatica. Valor nulo: a API não tinha o dado naquele dia.
+CREATE TABLE IF NOT EXISTS gold.clima_diario (
+  id                bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  fonte             text         NOT NULL,
+  estacao           text         NOT NULL,
+  territorio        text         NOT NULL REFERENCES gold.territorio (nome),
+  dia               date         NOT NULL,
+  chuva_mm          numeric(7,2) CHECK (chuva_mm >= 0),
+  temp_media_c      numeric(5,2),
+  temp_min_c        numeric(5,2),
+  temp_max_c        numeric(5,2),
+  umidade_media_pct numeric(5,2) CHECK (umidade_media_pct BETWEEN 0 AND 100),
+  atualizado_em     timestamptz  NOT NULL DEFAULT now(),
+  CONSTRAINT clima_diario_uk UNIQUE (fonte, estacao, dia)
+);
