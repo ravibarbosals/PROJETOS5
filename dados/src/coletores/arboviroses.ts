@@ -22,13 +22,14 @@ export const FONTE = 'recife_arboviroses';
 const CKAN = 'https://dados.recife.pe.gov.br/api/3/action';
 const CONJUNTO = 'casos-de-dengue-zika-e-chikungunya';
 
-// DEC-031: os 3 anos mais recentes publicados de cada agravo
-export const ANOS = 3;
+// DEC-043: os 5 anos mais recentes publicados de cada agravo (hoje 2021 a
+// 2025). Antes de 2021 o portal usa outro formato de colunas (TASK-082).
+export const ANOS = 5;
 
 // Sobe quando a forma de contar muda: coletas de outra versão são baixadas de
 // novo, mesmo que o portal não tenha republicado o arquivo. 2: bairro pelo
-// código da ficha (TASK-063)
-export const VERSAO_CONTAGEM = 2;
+// código da ficha (TASK-063); 3: só as fichas do próprio agravo (TASK-074)
+export const VERSAO_CONTAGEM = 3;
 
 // Maior página que a API devolve
 const PAGINA = 500;
@@ -41,9 +42,16 @@ const DESCARTADO: Record<Agravo, string> = {
   zika: '2',
 };
 
+// CID-10 de cada agravo, sem o ponto (o portal grava "A92.0" e "A928").
+const CID: Record<Agravo, string> = {
+  dengue: 'A90',
+  chikungunya: 'A920',
+  zika: 'A928',
+};
+
 // Só as colunas que a contagem usa: o resto da ficha (nascimento, endereço,
 // CEP) nunca sai da API (REQ-014). Alguns anos vêm com os nomes em minúsculas
-const COLUNAS = ['ID_BAIRRO', 'NM_BAIRRO', 'SEM_NOT', 'CLASSI_FIN'];
+const COLUNAS = ['ID_AGRAVO', 'ID_BAIRRO', 'NM_BAIRRO', 'SEM_NOT', 'CLASSI_FIN'];
 
 export const SEM_BAIRRO = 'NAO INFORMADO';
 
@@ -118,19 +126,37 @@ function resolverBairros(linhas: Record<string, unknown>[]) {
   };
 }
 
+// DEC-043: uma ficha com o CID de outro agravo não conta. O arquivo "Zika
+// 2021" do portal é cópia do de chikungunya (só A92.0); sem isto, os casos de
+// chikungunya contariam duas vezes. CID em branco segue o agravo do arquivo.
+function deOutroAgravo(linha: Record<string, unknown>, agravo: Agravo) {
+  const cid = campo(linha, 'ID_AGRAVO').replace('.', '').trim().toUpperCase();
+  return cid !== '' && cid !== CID[agravo];
+}
+
 // Conta os casos prováveis por bairro e semana. Recebe as linhas como a API
 // devolve; o que sai daqui é só contagem.
 export function contarCasos(
   linhas: unknown[],
   agravo: Agravo,
-): { contagens: Contagem[]; descartadas: number; semSemana: number } {
+): {
+  contagens: Contagem[];
+  descartadas: number;
+  semSemana: number;
+  outroAgravo: number;
+} {
   const validas = linhas.filter(isObjeto);
   const bairroDe = resolverBairros(validas);
   const porChave = new Map<string, Contagem>();
   let descartadas = 0;
   let semSemana = 0;
+  let outroAgravo = 0;
 
   for (const linha of validas) {
+    if (deOutroAgravo(linha, agravo)) {
+      outroAgravo += 1;
+      continue;
+    }
     if (campo(linha, 'CLASSI_FIN') === DESCARTADO[agravo]) {
       descartadas += 1;
       continue;
@@ -150,7 +176,12 @@ export function contarCasos(
     }
   }
 
-  return { contagens: [...porChave.values()], descartadas, semSemana };
+  return {
+    contagens: [...porChave.values()],
+    descartadas,
+    semSemana,
+    outroAgravo,
+  };
 }
 
 async function getJson(
@@ -221,7 +252,7 @@ export async function coletarRecurso(recurso: Recurso): Promise<Coleta> {
       linhas.push(...pagina);
     }
 
-    const { contagens, descartadas, semSemana } = contarCasos(
+    const { contagens, descartadas, semSemana, outroAgravo } = contarCasos(
       linhas,
       recurso.agravo,
     );
@@ -238,6 +269,7 @@ export async function coletarRecurso(recurso: Recurso): Promise<Coleta> {
         linhas: linhas.length,
         descartadas,
         sem_semana: semSemana,
+        outro_agravo: outroAgravo,
         contagens,
       },
     };

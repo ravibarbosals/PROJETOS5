@@ -138,4 +138,34 @@ describe('contarCasos', () => {
     ]);
     assert.equal(semSemana, 1);
   });
+
+  it('drops rows of another disease: the portal "Zika 2021" is a copy of chikungunya (DEC-043)', () => {
+    const { contagens, outroAgravo } = contarCasos(
+      [
+        { ID_AGRAVO: 'A92.0', ID_BAIRRO: 20, NM_BAIRRO: 'IBURA', SEM_NOT: '202101' },
+        { ID_AGRAVO: 'A92.0', ID_BAIRRO: 20, NM_BAIRRO: 'IBURA', SEM_NOT: '202101' },
+      ],
+      'zika',
+    );
+
+    assert.deepEqual(contagens, []);
+    assert.equal(outroAgravo, 2);
+  });
+
+  it('matches the CID with or without the dot, and trusts a blank one', () => {
+    const { contagens, outroAgravo } = contarCasos(
+      [
+        { ID_AGRAVO: 'A928', ID_BAIRRO: 20, NM_BAIRRO: 'IBURA', SEM_NOT: '202501' },
+        { ID_AGRAVO: 'A92.8', ID_BAIRRO: 20, NM_BAIRRO: 'IBURA', SEM_NOT: '202501' },
+        { id_agravo: '', ID_BAIRRO: 20, NM_BAIRRO: 'IBURA', SEM_NOT: '202501' },
+        { ID_AGRAVO: 'A90', ID_BAIRRO: 20, NM_BAIRRO: 'IBURA', SEM_NOT: '202501' },
+      ],
+      'zika',
+    );
+
+    assert.deepEqual(contagens, [
+      { bairro: 'IBURA', semana: '202501', casos: 3 },
+    ]);
+    assert.equal(outroAgravo, 1);
+  });
 });
