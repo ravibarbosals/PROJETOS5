@@ -1,3 +1,5 @@
+import { PONTOS, type PontoOpenMeteo } from '../coletores/openmeteo.js';
+
 export type Variavel =
   'precipitacao_mm' | 'temperatura_c' | 'umidade_pct' | 'pressao_hpa';
 
@@ -18,11 +20,23 @@ const VARIAVEIS: Record<string, Variavel> = {
   surface_pressure: 'pressao_hpa',
 };
 
+// Coletas de antes das RPAs (DEC-035): um objeto só, do Recife inteiro.
+const PONTO_RECIFE: PontoOpenMeteo = {
+  estacao: 'recife',
+  territorio: 'Recife',
+  latitude: '-8.05',
+  longitude: '-34.9',
+};
+
 function isObjeto(valor: unknown): valor is Record<string, unknown> {
   return typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 }
 
-export function extrairLeituras(payload: unknown, coletadoEm: Date): Leitura[] {
+function extrairDoPonto(
+  payload: unknown,
+  ponto: PontoOpenMeteo,
+  coletadoEm: Date,
+): Leitura[] {
   if (!isObjeto(payload) || !isObjeto(payload.hourly)) {
     throw new Error('payload do Open-Meteo sem hourly');
   }
@@ -51,8 +65,8 @@ export function extrairLeituras(payload: unknown, coletadoEm: Date): Leitura[] {
       }
       leituras.push({
         fonte: 'openmeteo',
-        estacao: 'recife',
-        territorio: 'Recife',
+        estacao: ponto.estacao,
+        territorio: ponto.territorio,
         variavel,
         valor,
         lidaEm,
@@ -60,4 +74,20 @@ export function extrairLeituras(payload: unknown, coletadoEm: Date): Leitura[] {
     });
   }
   return leituras;
+}
+
+// Com vários pontos a API devolve uma lista, na ordem de PONTOS; a coleta
+// antiga, de um ponto só, é um objeto.
+export function extrairLeituras(payload: unknown, coletadoEm: Date): Leitura[] {
+  if (!Array.isArray(payload)) {
+    return extrairDoPonto(payload, PONTO_RECIFE, coletadoEm);
+  }
+  if (payload.length !== PONTOS.length) {
+    throw new Error(
+      `payload do Open-Meteo com ${payload.length} pontos, esperados ${PONTOS.length}`,
+    );
+  }
+  return payload.flatMap((doPonto, i) =>
+    extrairDoPonto(doPonto, PONTOS[i], coletadoEm),
+  );
 }

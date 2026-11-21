@@ -120,6 +120,26 @@ async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
   return ok;
 }
 
+// DEC-035: cada bairro ganha a RPA de gold.bairro_rpa; bairro fora da lista
+// ("NAO INFORMADO") fica no Recife. Roda em todo ciclo, e não só com coleta
+// nova, para acertar também as linhas gravadas antes do catálogo.
+const ATRIBUIR_RPA = `
+  UPDATE gold.indicador_territorio i
+  SET territorio = b.territorio
+  FROM gold.bairro_rpa b
+  WHERE i.fonte = $1 AND b.bairro = i.bairro AND i.territorio <> b.territorio`;
+
+async function atribuirRpa(pool: pg.Pool): Promise<boolean> {
+  try {
+    const { rowCount } = await pool.query(ATRIBUIR_RPA, [FONTE_ARBOVIROSES]);
+    if (rowCount) console.log(`${FONTE_ARBOVIROSES}: RPA em ${rowCount} linhas`);
+    return true;
+  } catch (erro) {
+    console.error(`${FONTE_ARBOVIROSES}: ${String(erro)}`);
+    return false;
+  }
+}
+
 // Com alguma coleta nova, refaz o gold da fonte a partir da última coleta de
 // cada recurso: um recurso republicado pode ter perdido casos (fichas
 // descartadas depois), e o upsert sozinho deixaria a contagem antiga.
@@ -129,7 +149,7 @@ async function tratarArboviroses(pool: pg.Pool): Promise<boolean> {
      WHERE fonte = $1 AND status_http = 200 AND processado_em IS NULL`,
     [FONTE_ARBOVIROSES],
   );
-  if (pendentes.length === 0) return true;
+  if (pendentes.length === 0) return atribuirRpa(pool);
 
   const cliente = await pool.connect();
   try {
@@ -163,6 +183,7 @@ async function tratarArboviroses(pool: pg.Pool): Promise<boolean> {
         indicadores.map((i) => i.valor),
       ],
     );
+    await cliente.query(ATRIBUIR_RPA, [FONTE_ARBOVIROSES]);
     await cliente.query(
       'UPDATE bronze.coleta SET processado_em = now() WHERE id = ANY($1)',
       [pendentes.map((p) => p.id)],

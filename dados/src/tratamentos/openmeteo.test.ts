@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { PONTOS } from '../coletores/openmeteo.js';
 import { extrairLeituras } from './openmeteo.js';
 
 const payload = {
@@ -37,6 +38,32 @@ describe('extrairLeituras', () => {
 
     // 2 horas passadas x 4 variáveis, menos a temperatura nula
     assert.equal(leituras.length, 7);
+  });
+
+  it('reads an old single-point payload as Recife', () => {
+    const leituras = extrairLeituras(payload, coletadoEm);
+
+    assert.ok(
+      leituras.every((l) => l.estacao === 'recife' && l.territorio === 'Recife'),
+    );
+  });
+
+  it('reads one list item per RPA point, in order (DEC-035)', () => {
+    const lista = PONTOS.map(() => payload);
+
+    const leituras = extrairLeituras(lista, coletadoEm);
+
+    assert.equal(leituras.length, 7 * PONTOS.length);
+    const sul = leituras.filter((l) => l.estacao === 'rpa6');
+    assert.equal(sul.length, 7);
+    assert.ok(sul.every((l) => l.territorio === 'RPA 6 - Sul'));
+  });
+
+  it('rejects a list with a different number of points', () => {
+    assert.throws(
+      () => extrairLeituras([payload], coletadoEm),
+      /1 pontos, esperados 6/,
+    );
   });
 
   it('rejects a payload without hourly data', () => {
