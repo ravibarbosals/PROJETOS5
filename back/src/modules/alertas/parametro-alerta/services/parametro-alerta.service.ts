@@ -22,6 +22,7 @@ import { ParametroAlertaHistorico } from '@/modules/alertas/entities/parametro-a
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
+import { TerritorioService } from '@/modules/paineis/territorio/services/territorio.service';
 
 // Nomes da API, que também são as chaves do histórico (RN-001).
 export interface CriarParametroAlerta {
@@ -74,15 +75,20 @@ export class ParametroAlertaService {
     @InjectRepository(ParametroAlertaHistorico)
     private readonly historicos: Repository<ParametroAlertaHistorico>,
     private readonly dataSource: DataSource,
+    private readonly territorios: TerritorioService,
   ) {}
 
-  // RN-001 #1 e #4: parâmetro e histórico na mesma transação. A variável não é
-  // conferida com o gold enquanto a DEC-009 não existir.
+  // RN-001 #1 e #4: parâmetro e histórico na mesma transação. O território
+  // precisa estar no catálogo (DEC-035); a variável não é conferida com o gold
+  // (o formulário só oferece as do gold, TASK-065).
   async criar(
     dados: CriarParametroAlerta,
     autor: Usuario,
   ): Promise<ParametroAlerta> {
     exigirLimiaresValidos(dados);
+    if (!(await this.territorios.existe(dados.territorio))) {
+      throw new BusinessRuleException(AlertasRules.TERRITORIO_DESCONHECIDO);
+    }
     return this.dataSource.transaction(async (manager) => {
       const parametro = await manager.save(
         manager.create(ParametroAlerta, {

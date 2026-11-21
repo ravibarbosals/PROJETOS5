@@ -3,6 +3,9 @@ import type { AppE2e } from './e2e-app';
 
 interface DadosLeitura {
   fonte?: string;
+  /** Padrão: o ponto único do Recife, como antes das RPAs (DEC-035) */
+  estacao?: string;
+  territorio?: string;
   variavel: string;
   valor: number;
   lidaEm: Date;
@@ -27,8 +30,15 @@ export async function limparGold(app: AppE2e) {
 export async function inserirLeitura(app: AppE2e, dados: DadosLeitura) {
   await app.get(DataSource).query(
     `INSERT INTO gold.leitura_climatica (fonte, estacao, territorio, variavel, valor, lida_em)
-       VALUES ($1, 'recife', 'Recife', $2, $3, $4)`,
-    [dados.fonte ?? 'openmeteo', dados.variavel, dados.valor, dados.lidaEm],
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      dados.fonte ?? 'openmeteo',
+      dados.estacao ?? 'recife',
+      dados.territorio ?? 'Recife',
+      dados.variavel,
+      dados.valor,
+      dados.lidaEm,
+    ],
   );
 }
 

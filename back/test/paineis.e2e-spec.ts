@@ -11,7 +11,7 @@ import { logado } from './helpers/e2e-usuarios';
 const horasAtras = (horas: number) =>
   new Date(Date.now() - horas * 60 * 60 * 1000);
 
-// MOD-005, RN-007, PER-010. O join com a view do gold só roda num banco de
+// MOD-005, RN-007, PER-010, DEC-035. O join com a view do gold só roda num banco de
 // verdade.
 describe('Leituras e status das fontes (e2e)', () => {
   let app: AppE2e;
@@ -126,8 +126,53 @@ describe('Leituras e status das fontes (e2e)', () => {
     ]);
   });
 
+  it('the Recife filter brings the RPAs; an RPA brings only itself (DEC-035)', async () => {
+    const lidaEm = horasAtras(1);
+    for (const [estacao, territorio, valor] of [
+      ['recife', 'Recife', 1],
+      ['rpa1', 'RPA 1 - Centro', 2],
+      ['rpa6', 'RPA 6 - Sul', 3],
+    ] as const) {
+      await inserirLeitura(app, {
+        estacao,
+        territorio,
+        variavel: 'precipitacao_mm',
+        valor,
+        lidaEm,
+      });
+    }
+    const valores = async (territorio: string) =>
+      (
+        (
+          await get(
+            `/leituras?territorio=${encodeURIComponent(territorio)}`,
+          ).expect(200)
+        ).body as { valor: number }[]
+      )
+        .map((l) => l.valor)
+        .sort();
+
+    expect(await valores('Recife')).toEqual([1, 2, 3]);
+    expect(await valores('RPA 6 - Sul')).toEqual([3]);
+  });
+
+  it('lists the territories: Recife first, then the 6 RPAs (DEC-035)', async () => {
+    const res = await get('/territorios').expect(200);
+
+    expect(res.body).toEqual([
+      { nome: 'Recife', tipo: 'MUNICIPIO', pai: null },
+      { nome: 'RPA 1 - Centro', tipo: 'RPA', pai: 'Recife' },
+      { nome: 'RPA 2 - Norte', tipo: 'RPA', pai: 'Recife' },
+      { nome: 'RPA 3 - Noroeste', tipo: 'RPA', pai: 'Recife' },
+      { nome: 'RPA 4 - Oeste', tipo: 'RPA', pai: 'Recife' },
+      { nome: 'RPA 5 - Sudoeste', tipo: 'RPA', pai: 'Recife' },
+      { nome: 'RPA 6 - Sul', tipo: 'RPA', pai: 'Recife' },
+    ]);
+  });
+
   it('answers 401 without login (PER-010)', async () => {
     await request(app.getHttpServer()).get('/leituras').expect(401);
     await request(app.getHttpServer()).get('/fontes/status').expect(401);
+    await request(app.getHttpServer()).get('/territorios').expect(401);
   });
 });

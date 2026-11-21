@@ -18,6 +18,7 @@ import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { ControleAvaliacaoAlerta } from '@/modules/alertas/entities/controle-avaliacao-alerta.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
+import { sqlTerritorioAbrangido } from '@/modules/paineis/territorio/domain/territorio-abrangido';
 
 const HORA_MS = 60 * 60 * 1000;
 
@@ -44,7 +45,9 @@ const paraAvaliado = (p: ParametroAlerta): ParametroAvaliado => ({
 
 // FLX-002 (DEC-015): para cada variável + território com parâmetro ativo ou
 // alerta ativo, lê o gold, decide com avaliarLeitura (RN-012, RN-013, RN-015)
-// e grava. Tudo numa transação, sob uma trava do PostgreSQL.
+// e grava. Tudo numa transação, sob uma trava do PostgreSQL. O território
+// inclui as leituras dos filhos (o Recife, as das RPAs), e a série vale a
+// estação de maior valor (DEC-034).
 @Injectable()
 export class AvaliacaoAlertasService {
   constructor(
@@ -151,7 +154,7 @@ export class AvaliacaoAlertasService {
     const linhas = await manager.query<LinhaLeitura[]>(
       `SELECT fonte, estacao, lida_em, valor
        FROM gold.leitura_climatica
-       WHERE variavel = $1 AND territorio = $2
+       WHERE variavel = $1 AND ${sqlTerritorioAbrangido('territorio', '$2')}
          AND lida_em > $3 AND lida_em <= $4`,
       [
         variavel,

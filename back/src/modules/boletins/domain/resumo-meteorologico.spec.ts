@@ -9,9 +9,10 @@ const leitura = (
   valor: number,
   lidaEm: string,
   fonteAtualizadaEm: Date | null = ATUALIZADA,
+  estacao = 'recife',
 ): LeituraResponseDto => ({
   fonte: 'openmeteo',
-  estacao: 'recife',
+  estacao,
   territorio: 'Recife',
   variavel,
   valor,
@@ -54,6 +55,25 @@ describe('resumirMeteorologia (TASK-032, PR-013)', () => {
       chuvaUltimaHora: null,
       umidadeAtual: null,
       atualizadaEm: null,
+    });
+  });
+
+  it('keeps the station with the most rain instead of adding the stations (DEC-034)', () => {
+    const P = VariavelClimatica.Precipitacao;
+    const U = VariavelClimatica.Umidade;
+    const resumo = resumirMeteorologia([
+      leitura(P, 3, '2026-11-20T10:00:00Z', ATUALIZADA, 'rpa1'),
+      leitura(P, 1, '2026-11-20T11:00:00Z', ATUALIZADA, 'rpa1'),
+      leitura(P, 2, '2026-11-20T10:00:00Z', ATUALIZADA, 'rpa6'),
+      leitura(P, 5, '2026-11-20T11:00:00Z', ATUALIZADA, 'rpa6'),
+      leitura(U, 70, '2026-11-20T11:00:00Z', ATUALIZADA, 'rpa1'),
+      leitura(U, 88, '2026-11-20T11:00:00Z', ATUALIZADA, 'rpa6'),
+    ]);
+
+    expect(resumo).toMatchObject({
+      chuvaAcumulada: 7,
+      chuvaUltimaHora: { valor: 5, lidaEm: new Date('2026-11-20T11:00:00Z') },
+      umidadeAtual: { valor: 88, lidaEm: new Date('2026-11-20T11:00:00Z') },
     });
   });
 

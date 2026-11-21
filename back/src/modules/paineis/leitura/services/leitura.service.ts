@@ -4,6 +4,7 @@ import { inicioDaJanela } from '@/modules/paineis/leitura/domain/janela-periodo'
 import { LeituraResponseDto } from '@/modules/paineis/leitura/dto/leitura-response.dto';
 import { LeiturasQueryDto } from '@/modules/paineis/leitura/dto/leituras-query.dto';
 import { VariavelClimatica } from '@/modules/paineis/leitura/enums/variavel-climatica.enum';
+import { sqlTerritorioAbrangido } from '@/modules/paineis/territorio/domain/territorio-abrangido';
 
 interface LinhaLeitura {
   fonte: string;
@@ -16,7 +17,8 @@ interface LinhaLeitura {
   fonte_atualizada_em: Date | null;
 }
 
-// Só leitura sobre o schema gold, gravado pela pipeline (PR-007, DEC-024).
+// Só leitura sobre o schema gold, gravado pela pipeline (PR-007, DEC-024). O
+// filtro de território inclui os filhos: o Recife traz as RPAs (DEC-035).
 @Injectable()
 export class LeituraService {
   constructor(private readonly dataSource: DataSource) {}
@@ -32,7 +34,7 @@ export class LeituraService {
        LEFT JOIN gold.fonte_status s ON s.fonte = l.fonte
        WHERE l.lida_em > $1 AND l.lida_em <= $2
          AND ($3::text IS NULL OR l.variavel = $3)
-         AND ($4::text IS NULL OR l.territorio = $4)
+         AND ($4::text IS NULL OR ${sqlTerritorioAbrangido('l.territorio', '$4')})
        ORDER BY l.lida_em, l.variavel`,
       [
         inicioDaJanela(filtros.periodo, agora),

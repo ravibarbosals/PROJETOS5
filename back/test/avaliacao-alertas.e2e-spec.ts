@@ -93,6 +93,57 @@ describe('Avaliação de alertas (e2e)', () => {
     expect(controle.ultimaLidaEm).toEqual(horas(0));
   });
 
+  it('Recife takes the RPA station with the most rain, not the sum of the stations (DEC-034)', async () => {
+    const naRpa =
+      (estacao: string, territorio: string) => (h: number, valor: number) =>
+        inserirLeitura(app, {
+          estacao,
+          territorio,
+          variavel: 'precipitacao_mm',
+          valor,
+          lidaEm: horas(h),
+        });
+    const centro = naRpa('rpa1', 'RPA 1 - Centro');
+    const sul = naRpa('rpa6', 'RPA 6 - Sul');
+    // 3 h: Centro soma 20, Sul soma 32. Somadas dariam 52 (ALTO).
+    await centro(-1, 10);
+    await centro(0, 10);
+    await sul(-1, 30);
+    await sul(0, 2);
+
+    expect(await avaliacao.executar(AGORA)).toMatchObject({ DISPARAR: 1 });
+
+    const [alerta] = await alertas();
+    expect(alerta).toMatchObject({
+      territorio: 'Recife',
+      nivel: NivelAlerta.Moderado,
+      estacao: 'rpa6',
+      valorLido: 32,
+    });
+  });
+
+  it('an RPA parameter does not see the other RPAs (DEC-035)', async () => {
+    await fonte.getRepository(ParametroAlerta).save({
+      variavel: 'precipitacao_mm',
+      territorio: 'RPA 1 - Centro',
+      limiar: 30,
+      limiarSaida: 10,
+      janelaHoras: 3,
+      nivel: NivelAlerta.Moderado,
+    });
+    await inserirLeitura(app, {
+      estacao: 'rpa6',
+      territorio: 'RPA 6 - Sul',
+      variavel: 'precipitacao_mm',
+      valor: 40,
+      lidaEm: horas(0),
+    });
+
+    await avaliacao.executar(AGORA);
+
+    expect((await alertas()).map((a) => a.territorio)).toEqual(['Recife']);
+  });
+
   it('escalates the same alert to ALTO (RN-012 #5)', async () => {
     await chuva(-1, 15);
     await chuva(0, 20);

@@ -7,6 +7,7 @@ import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.ent
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
 import { OperacaoHistorico } from '@/modules/alertas/enums/operacao-historico.enum';
 import { ParametroAlertaService } from '@/modules/alertas/parametro-alerta/services/parametro-alerta.service';
+import type { TerritorioService } from '@/modules/paineis/territorio/services/territorio.service';
 
 const GESTOR = Object.assign(new Usuario(), { id: 2, nome: 'Camila Rocha' });
 
@@ -41,12 +42,14 @@ function setup(existente: ParametroAlerta | null = parametro()) {
     ),
   };
   const parametros = { exists: jest.fn().mockResolvedValue(!!existente) };
+  const territorios = { existe: jest.fn().mockResolvedValue(true) };
   const service = new ParametroAlertaService(
     parametros as unknown as Repository<ParametroAlerta>,
     {} as Repository<ParametroAlertaHistorico>,
     dataSource as unknown as DataSource,
+    territorios as unknown as TerritorioService,
   );
-  return { service, manager, dataSource };
+  return { service, manager, dataSource, territorios };
 }
 
 const novo = {
@@ -170,6 +173,20 @@ describe('ParametroAlertaService (RN-001)', () => {
     );
     expect(manager.save).not.toHaveBeenCalled();
     expect(manager.insert).not.toHaveBeenCalled();
+  });
+
+  it('answers 422 for a territory outside the catalog (DEC-035)', async () => {
+    const { service, territorios, dataSource } = setup();
+    territorios.existe.mockResolvedValue(false);
+
+    const erro = (await service
+      .criar(novo, GESTOR)
+      .catch((e: unknown) => e)) as BusinessRuleException;
+    expect(erro).toBeInstanceOf(BusinessRuleException);
+    expect(erro.getStatus()).toBe(HttpStatus.UNPROCESSABLE_ENTITY);
+    expect(erro.businessRuleCode).toBe('TERRITORIO_DESCONHECIDO');
+    expect(territorios.existe).toHaveBeenCalledWith('RPA-1');
+    expect(dataSource.transaction).not.toHaveBeenCalled();
   });
 
   it('accepts lowering both thresholds together', async () => {

@@ -8,6 +8,11 @@ export const AlertasRules = defineBusinessRules({
     message: 'O limiar de saída deve ser menor que o limiar',
     status: HttpStatus.UNPROCESSABLE_ENTITY,
   },
+  // DEC-035: parâmetro só para território do catálogo do gold.
+  TERRITORIO_DESCONHECIDO: {
+    message: 'Território fora do catálogo',
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+  },
   // RN-015 #9: encerrar, invalidar e prorrogar só valem para alerta ativo.
   ALERTA_NAO_ATIVO: {
     message: 'O alerta não está ativo',

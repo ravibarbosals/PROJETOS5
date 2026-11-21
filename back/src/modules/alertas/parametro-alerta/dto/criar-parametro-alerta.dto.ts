@@ -28,7 +28,7 @@ export class CriarParametroAlertaDto {
   @MaxLength(50, { message: 'Variável inválida' })
   variavel!: string;
 
-  /** Identificador do território (granularidade: DUV-009) */
+  /** Nome do território no catálogo: Recife ou uma RPA (DEC-035) */
   @Transform(trim)
   @IsString({ message: 'Território inválido' })
   @IsNotEmpty({ message: 'Território inválido' })

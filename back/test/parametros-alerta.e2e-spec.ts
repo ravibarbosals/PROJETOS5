@@ -136,6 +136,31 @@ describe('Parâmetros de alerta (e2e)', () => {
     expect(segunda?.valor_anterior).toEqual(primeira?.valor_novo);
   });
 
+  it('refuses a territory outside the catalog, saving nothing (DEC-035)', async () => {
+    esperarErro(
+      await http()
+        .post('/parametros-alerta')
+        .set('Authorization', `Bearer ${ges.token}`)
+        .send({ ...NOVO, territorio: 'Boa Viagem' }),
+      {
+        status: 422,
+        businessRuleCode: 'TERRITORIO_DESCONHECIDO',
+        message: 'Território fora do catálogo',
+      },
+    );
+    const res = await http()
+      .get('/parametros-alerta')
+      .set('Authorization', `Bearer ${ges.token}`)
+      .expect(200);
+    expect((res.body as { data: Parametro[] }).data).toEqual([]);
+  });
+
+  it('creates a parameter for an RPA (DEC-035)', async () => {
+    const parametro = await criar({ ...NOVO, territorio: 'RPA 6 - Sul' });
+
+    expect(parametro).toMatchObject({ territorio: 'RPA 6 - Sul' });
+  });
+
   it('refuses an exit threshold not below the threshold, saving nothing (DEC-029)', async () => {
     esperarErro(
       await http()
@@ -214,7 +239,7 @@ describe('Parâmetros de alerta (e2e)', () => {
 
   it('lists only the active ones with the filter', async () => {
     const ativo = await criar();
-    const inativo = await criar({ ...NOVO, territorio: 'RPA-1' });
+    const inativo = await criar({ ...NOVO, territorio: 'RPA 1 - Centro' });
     await alterar(inativo.id, { ativo: false }).expect(200);
 
     const res = await http()

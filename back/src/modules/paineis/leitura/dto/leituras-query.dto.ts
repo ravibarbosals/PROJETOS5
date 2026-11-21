@@ -14,7 +14,7 @@ export class LeiturasQueryDto {
   @IsEnum(VariavelClimatica, { message: 'Variável inválida' })
   variavel?: VariavelClimatica;
 
-  /** Território (hoje só Recife, DUV-009) */
+  /** Território do catálogo (DEC-035); o Recife inclui as RPAs */
   @IsOptional()
   @IsString({ message: 'Território inválido' })
   @MaxLength(50, { message: 'Território inválido' })
