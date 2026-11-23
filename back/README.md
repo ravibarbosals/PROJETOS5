@@ -27,10 +27,15 @@ Não precisa de `.env`: o compose tem padrões locais para tudo. As imagens vêm
 | `api` | `vigia-api` | API em http://localhost:3000 (`/health` mostra o banco) |
 | `dados` | `vigia-dados` | Agendador da pipeline (DEC-026): coleta e trata ao subir e a cada `INTERVALO_MINUTOS` (padrão 60). Logs: `docker compose logs -f dados` |
 | `front` | `vigia-front` | Interface em **http://localhost:8080**. O nginx repassa `/api` para a API |
+| `mailpit` | `axllent/mailpit` (pública) | Caixa de entrada local em **http://localhost:8025**: recebe os e-mails de alerta (DEC-037) sem mandar nada para fora |
 
-Entre no front com **admin@exemplo.gov.br** e a senha **vigia-admin**. `db`, `api`, `dados` e `front` voltam sozinhos se o Docker reiniciar (`restart: unless-stopped`).
+Entre no front com **admin@exemplo.gov.br** e a senha **vigia-admin**. `db`, `api`, `dados`, `front` e `mailpit` voltam sozinhos se o Docker reiniciar (`restart: unless-stopped`).
 
-Os padrões servem só para rodar localmente. Para trocar qualquer um (senhas, `JWT_SECRET`, `ADMIN_*`, portas), crie um `.env` a partir do `.env.example`; o compose lê o `.env` desta pasta e o que estiver nele vence o padrão. Portas: `POSTGRES_PORT` (banco, 5432), `PORT` (API, 3000) e `FRONT_PORT` (front, 8080).
+Os padrões servem só para rodar localmente. Para trocar qualquer um (senhas, `JWT_SECRET`, `ADMIN_*`, portas), crie um `.env` a partir do `.env.example`; o compose lê o `.env` desta pasta e o que estiver nele vence o padrão. Portas: `POSTGRES_PORT` (banco, 5432), `PORT` (API, 3000), `FRONT_PORT` (front, 8080) e `MAILPIT_PORT` (Mailpit, 8025).
+
+### E-mail dos alertas
+
+Cada alerta disparado ou escalonado vai por e-mail para todos os usuários ativos, um e-mail por pessoa (PR-027, PR-029, DEC-037). No compose, a API manda tudo para o Mailpit. Para usar um SMTP de verdade, preencha `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM` no `.env`. Fora do compose, sem `SMTP_HOST`, nenhum e-mail é enviado e a API só registra o aviso no log.
 
 Para parar: `docker compose down`. Os dados ficam no volume `pg-data` e voltam no próximo `up`; só `docker compose down -v` apaga o banco.
 

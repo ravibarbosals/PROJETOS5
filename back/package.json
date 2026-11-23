@@ -46,6 +46,7 @@
     "class-validator": "^0.15.1",
     "dotenv": "^16.6.1",
     "nestjs-paginate": "^13.5.1",
+    "nodemailer": "^10.3.1",
     "pdfmake": "^0.3.11",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",

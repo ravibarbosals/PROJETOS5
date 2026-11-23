@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmailService } from '@/infrastructure/email/services/email.service';
+import { Usuario } from '@/modules/acesso/entities/usuario.entity';
 import { AlertaAcaoManual } from '@/modules/alertas/entities/alerta-acao-manual.entity';
 import { AlertaController } from '@/modules/alertas/alerta/controllers/alerta.controller';
 import { ParametroAlertaController } from '@/modules/alertas/parametro-alerta/controllers/parametro-alerta.controller';
@@ -10,6 +12,7 @@ import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.ent
 import { AvaliacaoAlertasJob } from '@/modules/alertas/avaliacao/jobs/avaliacao-alertas.job';
 import { AlertaService } from '@/modules/alertas/alerta/services/alerta.service';
 import { AvaliacaoAlertasService } from '@/modules/alertas/avaliacao/services/avaliacao-alertas.service';
+import { NotificacaoAlertaService } from '@/modules/alertas/notificacao/services/notificacao-alerta.service';
 import { ParametroAlertaService } from '@/modules/alertas/parametro-alerta/services/parametro-alerta.service';
 import { PaineisModule } from '@/modules/paineis/paineis.module';
 
@@ -22,6 +25,7 @@ import { PaineisModule } from '@/modules/paineis/paineis.module';
       ControleAvaliacaoAlerta,
       ParametroAlerta,
       ParametroAlertaHistorico,
+      Usuario,
     ]),
     PaineisModule,
   ],
@@ -31,6 +35,8 @@ import { PaineisModule } from '@/modules/paineis/paineis.module';
     ParametroAlertaService,
     AvaliacaoAlertasService,
     AvaliacaoAlertasJob,
+    EmailService,
+    NotificacaoAlertaService,
   ],
 })
 export class AlertasModule {}

@@ -1,7 +1,8 @@
-# The whole app: database, migrations + first administrator, API, data pipeline
-# and front. Runs without a .env (local defaults below); a .env in this folder
-# overrides any of them.
+# The whole app: database, migrations + first administrator, API, data pipeline,
+# front and a local mail inbox. Runs without a .env (local defaults below); a
+# .env in this folder overrides any of them.
 #   docker compose up -d --wait   ->  http://localhost:8080
+#   alert e-mails (DEC-037)       ->  http://localhost:8025
 # The images come from Docker Hub; `--build` rebuilds them from the source.
 
 x-database-url: &database-url postgresql://postgres:${POSTGRES_PASSWORD:-vigia-local}@db:5432/${POSTGRES_DB:-vigia}
@@ -89,6 +90,12 @@ services:
     environment:
       <<: *api-env
       DEMO_SENHA: ${DEMO_SENHA:-vigia-demo}
+      # DEC-037: Mailpit by default; a real SMTP in the .env replaces it.
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-O Vigia <alertas@vigia.local>}
     ports:
       - "${PORT:-3000}:3000"
     healthcheck:
@@ -100,6 +107,8 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      mailpit:
+        condition: service_started
     restart: unless-stopped
 
   # Data pipeline scheduler (DEC-026): one collect + transform cycle on start,
@@ -129,6 +138,14 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Catches every e-mail the API sends and shows it in a web inbox (DEC-037).
+  # Nothing leaves the machine. Public image, used as is.
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    ports:
+      - "${MAILPIT_PORT:-8025}:8025"
     restart: unless-stopped
 
 volumes:

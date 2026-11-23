@@ -18,6 +18,11 @@ import { Alerta } from '@/modules/alertas/entities/alerta.entity';
 import { ControleAvaliacaoAlerta } from '@/modules/alertas/entities/controle-avaliacao-alerta.entity';
 import { ParametroAlerta } from '@/modules/alertas/entities/parametro-alerta.entity';
 import { StatusAlerta } from '@/modules/alertas/enums/status-alerta.enum';
+import { EventoAlerta } from '@/modules/alertas/notificacao/domain/email-do-alerta';
+import {
+  AvisoDeAlerta,
+  NotificacaoAlertaService,
+} from '@/modules/alertas/notificacao/services/notificacao-alerta.service';
 import { sqlTerritorioAbrangido } from '@/modules/paineis/territorio/domain/territorio-abrangido';
 
 const HORA_MS = 60 * 60 * 1000;
@@ -47,16 +52,29 @@ const paraAvaliado = (p: ParametroAlerta): ParametroAvaliado => ({
 // alerta ativo, lê o gold, decide com avaliarLeitura (RN-012, RN-013, RN-015)
 // e grava. Tudo numa transação, sob uma trava do PostgreSQL. O território
 // inclui as leituras dos filhos (o Recife, as das RPAs), e a série vale a
-// estação de maior valor (DEC-034).
+// estação de maior valor (DEC-034). Disparos e escalonamentos vão por e-mail
+// depois do COMMIT, sem esperar o envio (DEC-037).
 @Injectable()
 export class AvaliacaoAlertasService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly config: ConfigService<EnvironmentVariables, true>,
+    private readonly notificacao: NotificacaoAlertaService,
   ) {}
 
   // null quando outra instância já está avaliando.
-  executar(agora = new Date()): Promise<ResumoAvaliacao | null> {
+  async executar(agora = new Date()): Promise<ResumoAvaliacao | null> {
+    const avisos: AvisoDeAlerta[] = [];
+    const resumo = await this.avaliar(agora, avisos);
+    // Só com o alerta gravado; um SMTP lento ou fora do ar não segura o job.
+    void this.notificacao.notificar(avisos);
+    return resumo;
+  }
+
+  private avaliar(
+    agora: Date,
+    avisos: AvisoDeAlerta[],
+  ): Promise<ResumoAvaliacao | null> {
     return this.dataSource.transaction(async (manager) => {
       const [{ obtida }] = await manager.query<{ obtida: boolean }[]>(
         'SELECT pg_try_advisory_xact_lock(hashtext($1)) AS obtida',
@@ -104,7 +122,14 @@ export class AvaliacaoAlertasService {
           alerta,
           agora,
         );
-        await this.aplicar(manager, decisao, pontos, alerta, agora);
+        const aviso = await this.aplicar(
+          manager,
+          decisao,
+          pontos,
+          alerta,
+          agora,
+        );
+        if (aviso) avisos.push(aviso);
         resumo[decisao.tipo] += 1;
         if (
           ultimaLeituraEm &&
@@ -236,17 +261,17 @@ export class AvaliacaoAlertasService {
     pontos: Map<number, PontoAvaliado>,
     alerta: Alerta | null,
     agora: Date,
-  ) {
-    if (decisao.tipo === 'NENHUMA') return;
+  ): Promise<AvisoDeAlerta | null> {
+    if (decisao.tipo === 'NENHUMA') return null;
 
     if (decisao.tipo === 'DISPARAR') {
       const parametro = await manager.findOneByOrFail(ParametroAlerta, {
         id: decisao.avaliacao.parametro.id,
       });
       const ponto = pontos.get(parametro.id);
-      if (!ponto) return;
+      if (!ponto) return null;
       // RN-013: o índice único parcial barra um segundo alerta ativo.
-      await manager.insert(Alerta, {
+      const { identifiers } = await manager.insert(Alerta, {
         idParametroAlerta: parametro.id,
         variavel: parametro.variavel,
         territorio: parametro.territorio,
@@ -261,22 +286,25 @@ export class AvaliacaoAlertasService {
         status: StatusAlerta.Ativo,
         dthrDisparo: agora,
       });
-      return;
+      return {
+        idAlerta: (identifiers[0] as { id: number }).id,
+        evento: EventoAlerta.Disparo,
+      };
     }
 
-    if (!alerta) return;
+    if (!alerta) return null;
     if (decisao.tipo === 'ATUALIZAR') {
       // Reavaliar as mesmas leituras não gera escrita (RN-013 #1).
       const igual =
         alerta.valorMaximo === decisao.valorMaximo &&
         alerta.ultimaLeituraEm.getTime() === decisao.ultimaLeituraEm.getTime();
-      if (igual) return;
+      if (igual) return null;
       await manager.update(Alerta, alerta.id, {
         valorMaximo: decisao.valorMaximo,
         ultimaLeituraEm: decisao.ultimaLeituraEm,
         dthrAtualizacao: agora,
       });
-      return;
+      return null;
     }
 
     if (decisao.tipo === 'ESCALONAR') {
@@ -292,7 +320,7 @@ export class AvaliacaoAlertasService {
         dthrEscalonamento: agora,
         dthrAtualizacao: agora,
       });
-      return;
+      return { idAlerta: alerta.id, evento: EventoAlerta.Escalonamento };
     }
 
     await manager.update(Alerta, alerta.id, {
@@ -301,5 +329,6 @@ export class AvaliacaoAlertasService {
       dthrEncerramento: agora,
       dthrAtualizacao: agora,
     });
+    return null;
   }
 }

@@ -2,6 +2,7 @@ import { plainToInstance } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
+  IsOptional,
   IsString,
   Matches,
   Max,
@@ -58,6 +59,29 @@ export class EnvironmentVariables {
   @Min(1)
   @Max(72)
   ALERTA_EXPIRACAO_HORAS: number = 6;
+
+  // DEC-037: e-mail do alerta por SMTP. Sem SMTP_HOST, o envio fica desligado
+  // (testes, scripts) e a API só registra o aviso no log.
+  @IsOptional()
+  @IsString()
+  SMTP_HOST?: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  SMTP_PORT: number = 587;
+
+  // Usuário e senha só se o servidor exigir (o Mailpit do compose não exige).
+  @IsOptional()
+  @IsString()
+  SMTP_USER?: string;
+
+  @IsOptional()
+  @IsString()
+  SMTP_PASS?: string;
+
+  @IsString()
+  SMTP_FROM: string = 'O Vigia <alertas@vigia.local>';
 }
 
 export function validateEnv(config: Record<string, unknown>) {
