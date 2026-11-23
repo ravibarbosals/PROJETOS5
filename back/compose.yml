@@ -1,10 +1,30 @@
-# The whole app: database, migrations + first administrator, API and front.
-#   docker compose up -d --build --wait   ->  http://localhost:8080
+# The whole app: database, migrations + first administrator, API, data pipeline
+# and front. Runs without a .env (local defaults below); a .env in this folder
+# overrides any of them.
+#   docker compose up -d --wait   ->  http://localhost:8080
+# The images come from Docker Hub; `--build` rebuilds them from the source.
+
+x-database-url: &database-url postgresql://postgres:${POSTGRES_PASSWORD:-vigia-local}@db:5432/${POSTGRES_DB:-vigia}
+
+# Validated on start by both the API and the migrations (env.validation.ts).
+x-api-env: &api-env
+  NODE_ENV: production
+  PORT: 3000
+  DATABASE_URL: *database-url
+  # Local default only; set your own (32+ characters) in the .env.
+  JWT_SECRET: ${JWT_SECRET:-segredo-local-do-compose-troque-em-producao}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+  ALERTA_INTERVALO_MINUTOS: ${ALERTA_INTERVALO_MINUTOS:-10}
+  ALERTA_ESTABILIZACAO_HORAS: ${ALERTA_ESTABILIZACAO_HORAS:-2}
+  ALERTA_EXPIRACAO_HORAS: ${ALERTA_EXPIRACAO_HORAS:-6}
+
 services:
+  # Own image (../dados/sql/Dockerfile): PostgreSQL 17 + the schema (DEC-016).
   db:
-    image: postgres:17-alpine
+    build: ../dados/sql
+    image: ravialmeida10/vigia-db:latest
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vigia-local}
       POSTGRES_DB: ${POSTGRES_DB:-vigia}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
@@ -15,15 +35,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
-  # The schemas live outside the migrations (DEC-016): the same SQL used on Neon
-  # creates app, bronze and gold (idempotent).
+  # Applies the schema baked into the db image on every start, so an existing
+  # volume also gets the tables added later (idempotent SQL).
   db-init:
-    image: postgres:17-alpine
+    image: ravialmeida10/vigia-db:latest
     environment:
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - ../dados/sql:/sql:ro
+      PGPASSWORD: ${POSTGRES_PASSWORD:-vigia-local}
+      # Hides the "already exists, skipping" notices of a re-run.
+      PGOPTIONS: -c client_min_messages=warning
     command:
       - psql
       - -h
@@ -34,8 +55,9 @@ services:
       - ${POSTGRES_DB:-vigia}
       - -v
       - ON_ERROR_STOP=1
+      - -q
       - -f
-      - /sql/schema.sql
+      - /docker-entrypoint-initdb.d/10-schema.sql
     depends_on:
       db:
         condition: service_healthy
@@ -45,10 +67,12 @@ services:
   # if one already exists). Same image as the API, compiled code.
   migrate:
     build: .
-    image: vigia-back
-    env_file: .env
+    image: ravialmeida10/vigia-api:latest
     environment:
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vigia}
+      <<: *api-env
+      ADMIN_NOME: ${ADMIN_NOME:-Administrador}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@exemplo.gov.br}
+      ADMIN_SENHA: ${ADMIN_SENHA:-vigia-admin}
     command:
       - sh
       - -c
@@ -61,16 +85,14 @@ services:
     restart: "no"
 
   api:
-    build: .
-    image: vigia-back
-    env_file: .env
+    image: ravialmeida10/vigia-api:latest
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vigia}
+      <<: *api-env
+      DEMO_SENHA: ${DEMO_SENHA:-vigia-demo}
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "${PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:$${PORT:-3000}/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -78,14 +100,15 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    restart: unless-stopped
 
   # Data pipeline scheduler (DEC-026): one collect + transform cycle on start,
   # then every INTERVALO_MINUTOS. Writes bronze and gold; the API only reads gold.
   dados:
     build: ../dados
-    image: vigia-dados
+    image: ravialmeida10/vigia-dados:latest
     environment:
-      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-vigia}
+      DATABASE_URL: *database-url
       INTERVALO_MINUTOS: ${INTERVALO_MINUTOS:-60}
     depends_on:
       db-init:
@@ -94,6 +117,7 @@ services:
 
   front:
     build: ../front
+    image: ravialmeida10/vigia-front:latest
     ports:
       - "${FRONT_PORT:-8080}:80"
     healthcheck:
@@ -105,6 +129,7 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   pg-data:

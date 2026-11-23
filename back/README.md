@@ -14,28 +14,40 @@ O app grava os próprios dados no schema `app`. Os dados climáticos chegam no s
 Todos os comandos rodam nesta pasta (`back`).
 
 ```bash
-cp .env.example .env    # preencha senhas, JWT_SECRET e ADMIN_* (instruções no próprio arquivo)
-docker compose up -d --build --wait
+docker compose up -d --wait
 ```
 
-Esse comando sobe o sistema inteiro, em ordem:
+Não precisa de `.env`: o compose tem padrões locais para tudo. As imagens vêm do Docker Hub (`ravialmeida10/vigia-db`, `vigia-api`, `vigia-dados` e `vigia-front`); com `--build`, são construídas a partir deste código. O comando sobe o sistema inteiro, em ordem:
 
-| Serviço | O que faz |
-|---|---|
-| `db` | PostgreSQL 17 |
-| `db-init` | Cria os schemas `app`, `bronze` e `gold` com o `../dados/sql/schema.sql` (idempotente; roda e termina) |
-| `migrate` | Aplica as migrations pendentes e cria o primeiro administrador com os dados `ADMIN_*` (roda uma vez e termina) |
-| `api` | API em http://localhost:3000 (`/health` mostra o banco) |
-| `dados` | Agendador da pipeline (DEC-026): coleta e trata ao subir e a cada `INTERVALO_MINUTOS` (padrão 60). Logs: `docker compose logs -f dados` |
-| `front` | Interface em **http://localhost:8080**. O nginx repassa `/api` para a API |
+| Serviço | Imagem | O que faz |
+|---|---|---|
+| `db` | `vigia-db` (`../dados/sql/Dockerfile`) | PostgreSQL 17 que cria os schemas `app`, `bronze` e `gold` na primeira subida |
+| `db-init` | `vigia-db` | Roda o mesmo `schema.sql` a cada subida, para um volume antigo receber as tabelas novas (idempotente; roda e termina) |
+| `migrate` | `vigia-api` | Aplica as migrations pendentes e cria o primeiro administrador (roda e termina; se já existe um, nada muda) |
+| `api` | `vigia-api` | API em http://localhost:3000 (`/health` mostra o banco) |
+| `dados` | `vigia-dados` | Agendador da pipeline (DEC-026): coleta e trata ao subir e a cada `INTERVALO_MINUTOS` (padrão 60). Logs: `docker compose logs -f dados` |
+| `front` | `vigia-front` | Interface em **http://localhost:8080**. O nginx repassa `/api` para a API |
 
-Entre no front com o `ADMIN_EMAIL` e a `ADMIN_SENHA` do `.env`. O seed é idempotente: se já existe um administrador, nada é criado nem alterado. Para outra porta, use `PORT` (API) ou `FRONT_PORT` (front) no `.env`.
+Entre no front com **admin@exemplo.gov.br** e a senha **vigia-admin**. `db`, `api`, `dados` e `front` voltam sozinhos se o Docker reiniciar (`restart: unless-stopped`).
 
-Para parar: `docker compose down`. Os dados ficam no volume `pg-data`; `docker compose down -v` apaga tudo.
+Os padrões servem só para rodar localmente. Para trocar qualquer um (senhas, `JWT_SECRET`, `ADMIN_*`, portas), crie um `.env` a partir do `.env.example`; o compose lê o `.env` desta pasta e o que estiver nele vence o padrão. Portas: `POSTGRES_PORT` (banco, 5432), `PORT` (API, 3000) e `FRONT_PORT` (front, 8080).
+
+Para parar: `docker compose down`. Os dados ficam no volume `pg-data` e voltam no próximo `up`; só `docker compose down -v` apaga o banco.
+
+### Publicar as imagens
+
+Com `docker login` feito na conta `ravialmeida10`:
+
+```bash
+docker compose build
+docker compose push db migrate dados front
+```
+
+O `migrate` e a `api` usam a mesma imagem, e o `db-init` usa a do `db`; por isso o push só cita um serviço de cada imagem.
 
 ### Dados de demonstração
 
-Para apresentar o sistema, `npm run seed:demo` cria 4 usuários (`tecnico`, `gestor`, `gestao` e `comunicacao`, todos `@demo.vigia.local`, com a senha `DEMO_SENHA` do `.env`), parâmetros de chuva e calor e um mês de alertas encerrados com ações. Os valores são ilustrativos e as datas, relativas a hoje. Só roda no Postgres local, nunca no Neon, e só num banco sem parâmetros. Rodar de novo não duplica nada.
+Para apresentar o sistema, `npm run seed:demo` cria 4 usuários (`tecnico`, `gestor`, `gestao` e `comunicacao`, todos `@demo.vigia.local`, com a senha `DEMO_SENHA` do `.env`; no compose, padrão `vigia-demo`), parâmetros de chuva e calor e um mês de alertas encerrados com ações. Os valores são ilustrativos e as datas, relativas a hoje. Só roda no Postgres local, nunca no Neon, e só num banco sem parâmetros. Rodar de novo não duplica nada.
 
 No dia da apresentação, `npm run seed:demo -- --ativo` acrescenta um alerta de chuva ATIVO, prorrogado por 8 horas. Depois disso o job de alertas o encerra sozinho.
 
