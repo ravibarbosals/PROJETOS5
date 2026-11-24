@@ -56,7 +56,7 @@ const mapa: Mapa = {
       longitude: -34.950349,
     },
   ],
-  fontes: [{ fonte: 'openmeteo', ultima_atualizacao: '2026-11-21T13:00:00Z' }],
+  fontes: [{ fonte: 'cemaden', ultima_atualizacao: '2026-11-21T13:00:00Z' }],
 }
 
 describe('MapaRiscoPanel (REQ-008, DEC-038)', () => {
@@ -113,7 +113,10 @@ describe('MapaRiscoPanel (REQ-008, DEC-038)', () => {
 
     const fontes = await screen.findByRole('list', { name: 'Fontes do mapa' })
     expect(
-      within(fontes).getByText('Chuva: Open-Meteo · atualizada em 21/11/2026 10:00'),
+      within(fontes).getByText('Chuva: pluviômetros do Cemaden · atualizada em 21/11/2026 10:00'),
+    ).toBeInTheDocument()
+    expect(
+      within(fontes).getByText('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC'),
     ).toBeInTheDocument()
     expect(
       within(fontes).getByText('População: IBGE, Censo 2022 · sem informação de atualização'),

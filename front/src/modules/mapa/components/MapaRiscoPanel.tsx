@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ATRIBUICAO_CEMADEN } from '@/lib/fontes'
 import { formatarDataHora, formatarNumero } from '@/lib/format'
 import {
   atualizacaoDaFonte,
@@ -38,7 +39,7 @@ const CAMADAS: { valor: CamadaRpa; rotulo: string }[] = [
 ]
 
 const FONTES: { fonte: string; rotulo: string }[] = [
-  { fonte: 'openmeteo', rotulo: 'Chuva: Open-Meteo' },
+  { fonte: 'cemaden', rotulo: 'Chuva: pluviômetros do Cemaden' },
   { fonte: 'recife_areas_risco', rotulo: 'Áreas de risco: Defesa Civil do Recife' },
   { fonte: 'ibge_populacao', rotulo: 'População: IBGE, Censo 2022' },
   { fonte: 'recife_limites_rpa', rotulo: 'Limites: Prefeitura do Recife' },
@@ -200,6 +201,8 @@ function Conteudo({ mapa, camada, mostrarAreas }: ConteudoProps) {
             </li>
           )
         })}
+        {/* DEC-036: a chuva do mapa é do Cemaden */}
+        <li>{ATRIBUICAO_CEMADEN}</li>
       </ul>
     </>
   )

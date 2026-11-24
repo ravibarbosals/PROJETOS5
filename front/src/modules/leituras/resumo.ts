@@ -56,10 +56,23 @@ function maiorAcumulado(chuva: Leitura[]): number | null {
   return Math.max(...[...porEstacao.values()].map(somar))
 }
 
+const HORA_MS = 60 * 60 * 1000
+
+// Chuva da última hora: a hora que termina na leitura de chuva mais recente,
+// somada em cada estação (o Cemaden lê a cada 10 min quando chove, DEC-045);
+// vale a estação de maior soma (DEC-034).
+function chuvaDaUltimaHora(chuva: Leitura[]): LeituraPontual | null {
+  const ultima = maisRecente(chuva)
+  if (!ultima) return null
+  const fim = Date.parse(ultima.lida_em)
+  const daHora = chuva.filter((l) => Date.parse(l.lida_em) > fim - HORA_MS)
+  return { valor: maiorAcumulado(daHora) ?? 0, lida_em: ultima.lida_em }
+}
+
 export function resumirLeituras(leituras: Leitura[]): ResumoClimatico {
   const chuva = daVariavel(leituras, 'precipitacao_mm')
   return {
-    chuvaUltimaHora: maisRecente(chuva),
+    chuvaUltimaHora: chuvaDaUltimaHora(chuva),
     chuvaAcumulada: maiorAcumulado(chuva),
     temperaturaMaxima: maiorValor(daVariavel(leituras, 'temperatura_c')),
     umidadeAtual: maisRecente(daVariavel(leituras, 'umidade_pct')),
@@ -96,6 +109,11 @@ const formatoDia = new Intl.DateTimeFormat('pt-BR', {
 // "dd/mm" do dia no Recife, também usado como chave do agrupamento.
 const diaNoRecife = (iso: string) => formatoDia.format(new Date(iso))
 
+// Início da hora da leitura, em UTC: as leituras de 10 min do Cemaden caem na
+// mesma barra (DEC-045).
+const inicioDaHora = (iso: string) =>
+  new Date(Math.floor(Date.parse(iso) / HORA_MS) * HORA_MS).toISOString()
+
 // 30 dias por hora são 720 barras: acima de 7 dias o gráfico agrupa por dia
 // (DEC-028), com a chuva somada e a temperatura máxima do dia (PR-013). Com
 // várias estações, cada barra mostra a de mais chuva (DEC-034).
@@ -108,12 +126,12 @@ export function serieDoGrafico(leituras: Leitura[], periodo: Periodo): PontoDoGr
   const ordenadas = [...leituras].sort((a, b) => a.lida_em.localeCompare(b.lida_em))
   for (const l of ordenadas) {
     if (l.variavel !== 'precipitacao_mm' && l.variavel !== 'temperatura_c') continue
-    const chave = porDia ? diaNoRecife(l.lida_em) : l.lida_em
+    const chave = porDia ? diaNoRecife(l.lida_em) : inicioDaHora(l.lida_em)
     let ponto = pontos.get(chave)
     if (!ponto) {
       const rotulo = porDia
         ? chave
-        : `${formatoHora.format(new Date(l.lida_em)).replace(', ', ' ')}h`
+        : `${formatoHora.format(new Date(chave)).replace(', ', ' ')}h`
       ponto = { chave, rotulo, chuva: null, temperatura: null }
       pontos.set(chave, ponto)
     }

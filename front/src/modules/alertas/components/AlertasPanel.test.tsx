@@ -134,6 +134,21 @@ describe('AlertasPanel (MOD-002, PR-009)', () => {
     expect(within(painel).getByText('24/10/2026 17:00 · Normalizado')).toBeInTheDocument()
   })
 
+  it('no detalhe, nomeia o pluviômetro do Cemaden e cita a rede (DEC-036)', async () => {
+    listarMock.mockResolvedValue(pagina([{ ...alerta, fonte: 'cemaden' }]))
+    renderWithQuery(<AlertasPanel />)
+
+    await userEvent.click(await screen.findByRole('row', { name: /Detalhes do alerta #10/ }))
+    const painel = screen.getByRole('dialog')
+
+    expect(
+      within(painel).getByText(/Cemaden \(pluviômetros\) · sem coleta registrada/),
+    ).toBeInTheDocument()
+    expect(
+      within(painel).getByText('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC'),
+    ).toBeInTheDocument()
+  })
+
   it('no encerrado, mostra até quando foi prorrogado sem dizer que venceu', async () => {
     listarMock.mockResolvedValue(
       pagina([{ ...encerrado, id: 10, prorrogado_ate: '2026-10-24T22:00:00Z' }]),

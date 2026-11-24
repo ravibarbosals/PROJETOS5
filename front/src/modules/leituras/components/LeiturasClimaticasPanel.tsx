@@ -4,6 +4,7 @@ import { PeriodoTabs } from '@/components/PeriodoTabs'
 import { QueryResult } from '@/components/QueryResult'
 import { SelectField } from '@/components/SelectField'
 import { StatCard } from '@/components/StatCard'
+import { ATRIBUICAO_CEMADEN, exigeAtribuicaoCemaden, nomeDaFonte } from '@/lib/fontes'
 import { formatarDataHora, formatarNumero } from '@/lib/format'
 import { PERIODOS, type Periodo } from '@/lib/periodo'
 import { GraficoClima } from '@/modules/leituras/components/GraficoClima'
@@ -56,16 +57,20 @@ function Painel({ leituras, periodo }: { leituras: Leitura[]; periodo: Periodo }
   const resumo = resumirLeituras(leituras)
   const atualizadaEm = ultimaAtualizacao(leituras)
   const rotuloPeriodo = PERIODOS.find((p) => p.valor === periodo)!.rotulo.toLowerCase()
+  const fontes = [...new Set(leituras.map((l) => l.fonte))].sort()
 
   return (
     <>
       {/* RN-007: nunca a hora atual quando a data da fonte é desconhecida. */}
-      <p className="text-sm text-muted-foreground">
-        Fonte: Open-Meteo ·{' '}
-        {atualizadaEm
-          ? `atualizada em ${formatarDataHora(atualizadaEm)}`
-          : 'sem informação de atualização'}
-      </p>
+      <div className="grid gap-1 text-sm text-muted-foreground">
+        <p>
+          Fonte: {fontes.length > 0 ? fontes.map(nomeDaFonte).join(', ') : 'sem leituras'} ·{' '}
+          {atualizadaEm
+            ? `atualizada em ${formatarDataHora(atualizadaEm)}`
+            : 'sem informação de atualização'}
+        </p>
+        {exigeAtribuicaoCemaden(fontes) && <p>{ATRIBUICAO_CEMADEN}</p>}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

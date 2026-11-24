@@ -8,6 +8,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
+import { ATRIBUICAO_CEMADEN, exigeAtribuicaoCemaden, nomeDaFonte } from '@/lib/fontes'
 import { formatarDataHora, formatarNumero } from '@/lib/format'
 import { ROTULO_MOTIVO, prorrogado } from '@/modules/alertas/situacao'
 import type { Alerta } from '@/modules/alertas/types'
@@ -60,10 +61,13 @@ function Detalhe({ alerta, onAgir }: { alerta: Alerta; onAgir?: (alerta: Alerta)
         </Item>
         <Item rotulo="Última leitura">{formatarDataHora(alerta.ultima_leitura_em)}</Item>
         <Item rotulo="Fonte">
-          {alerta.fonte}
+          {nomeDaFonte(alerta.fonte)}
           {alerta.fonte_atualizada_em
             ? ` · atualizada em ${formatarDataHora(alerta.fonte_atualizada_em)}`
             : ' · sem coleta registrada'}
+          {exigeAtribuicaoCemaden([alerta.fonte]) && (
+            <span className="block text-muted-foreground">{ATRIBUICAO_CEMADEN}</span>
+          )}
         </Item>
         <Item rotulo="Disparado">{formatarDataHora(alerta.disparado_em)}</Item>
         {alerta.escalonado_em && (

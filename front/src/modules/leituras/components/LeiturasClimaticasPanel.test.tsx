@@ -58,8 +58,33 @@ describe('LeiturasClimaticasPanel (REQ-008, PR-013)', () => {
     renderWithQuery(<LeiturasClimaticasPanel />)
 
     expect(
-      await screen.findByText('Fonte: Open-Meteo · atualizada em 18/11/2026 10:42'),
+      await screen.findByText(
+        'Fonte: Open-Meteo (modelo meteorológico) · atualizada em 18/11/2026 10:42',
+      ),
     ).toBeInTheDocument()
+    expect(screen.queryByText(/CEMADEN\/MCTIC/)).not.toBeInTheDocument()
+  })
+
+  it('nomeia as duas fontes e cita a rede do Cemaden quando a chuva é dele (DEC-036)', async () => {
+    listarMock.mockResolvedValue([
+      ...leituras.filter((l) => l.variavel !== 'precipitacao_mm'),
+      {
+        ...base,
+        fonte: 'cemaden',
+        estacao: '261160617A',
+        variavel: 'precipitacao_mm',
+        valor: 1.2,
+        lida_em: '2026-11-18T13:00:00Z',
+      },
+    ])
+    renderWithQuery(<LeiturasClimaticasPanel />)
+
+    expect(
+      await screen.findByText(
+        'Fonte: Cemaden (pluviômetros), Open-Meteo (modelo meteorológico) · atualizada em 18/11/2026 10:42',
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByText('DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC')).toBeInTheDocument()
   })
 
   it('sem leituras: avisa e não inventa valores nem data (RN-007 #2)', async () => {
@@ -68,7 +93,7 @@ describe('LeiturasClimaticasPanel (REQ-008, PR-013)', () => {
 
     expect(await screen.findByText('Nenhuma leitura no período.')).toBeInTheDocument()
     expect(
-      screen.getByText('Fonte: Open-Meteo · sem informação de atualização'),
+      screen.getByText('Fonte: sem leituras · sem informação de atualização'),
     ).toBeInTheDocument()
     expect(within(cartao('Chuva acumulada')).getByText('—')).toBeInTheDocument()
   })

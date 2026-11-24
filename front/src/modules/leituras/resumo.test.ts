@@ -73,6 +73,19 @@ describe('várias estações: vale a de maior valor (DEC-034)', () => {
   })
 })
 
+describe('chuva da última hora (DEC-045)', () => {
+  it('soma as leituras de 10 min da última hora em cada estação e fica com a maior', () => {
+    const resumo = resumirLeituras([
+      leitura('precipitacao_mm', 4, '2026-11-18T10:50:00Z', null, 'A'),
+      leitura('precipitacao_mm', 1.2, '2026-11-18T11:10:00Z', null, 'A'),
+      leitura('precipitacao_mm', 0.8, '2026-11-18T11:20:00Z', null, 'A'),
+      leitura('precipitacao_mm', 1.4, '2026-11-18T11:50:00Z', null, 'B'),
+    ])
+
+    expect(resumo.chuvaUltimaHora).toEqual({ valor: 2, lida_em: '2026-11-18T11:50:00Z' })
+  })
+})
+
 describe('ultimaAtualizacao (RN-007)', () => {
   it('a mais recente entre as leituras', () => {
     expect(
@@ -91,9 +104,23 @@ describe('ultimaAtualizacao (RN-007)', () => {
 describe('serieDoGrafico (DEC-028)', () => {
   it('por hora, em ordem, no horário do Recife; ignora umidade e pressão', () => {
     expect(serieDoGrafico(leituras, '24h')).toEqual([
-      { chave: '2026-11-18T10:00:00Z', rotulo: '18/11 07h', chuva: 0.1, temperatura: null },
-      { chave: '2026-11-18T11:00:00Z', rotulo: '18/11 08h', chuva: 0.4, temperatura: 30.7 },
-      { chave: '2026-11-18T12:00:00Z', rotulo: '18/11 09h', chuva: 0.2, temperatura: 29.8 },
+      { chave: '2026-11-18T10:00:00.000Z', rotulo: '18/11 07h', chuva: 0.1, temperatura: null },
+      { chave: '2026-11-18T11:00:00.000Z', rotulo: '18/11 08h', chuva: 0.4, temperatura: 30.7 },
+      { chave: '2026-11-18T12:00:00.000Z', rotulo: '18/11 09h', chuva: 0.2, temperatura: 29.8 },
+    ])
+  })
+
+  it('junta numa barra as leituras de 10 min da mesma hora, por estação (DEC-045)', () => {
+    const dezEmDez = [
+      leitura('precipitacao_mm', 1, '2026-11-18T10:10:00Z', null, 'A'),
+      leitura('precipitacao_mm', 2, '2026-11-18T10:20:00Z', null, 'A'),
+      leitura('precipitacao_mm', 2.5, '2026-11-18T10:50:00Z', null, 'B'),
+      leitura('precipitacao_mm', 0.4, '2026-11-18T11:10:00Z', null, 'A'),
+    ]
+
+    expect(serieDoGrafico(dezEmDez, '24h')).toEqual([
+      { chave: '2026-11-18T10:00:00.000Z', rotulo: '18/11 07h', chuva: 3, temperatura: null },
+      { chave: '2026-11-18T11:00:00.000Z', rotulo: '18/11 08h', chuva: 0.4, temperatura: null },
     ])
   })
 
