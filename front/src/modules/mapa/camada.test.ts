@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  areasPrioritarias,
   atualizacaoDaFonte,
   corDaChuva,
   corDoAlerta,
@@ -8,7 +9,9 @@ import {
   LEGENDA_ALERTA,
   LEGENDA_CHUVA,
   LEGENDA_RISCO,
+  pessoasEmRisco,
   populacaoTotal,
+  rotuloDaPrioridade,
   rotuloDoRisco,
 } from '@/modules/mapa/camadas'
 import type { RpaMapa } from '@/modules/mapa/types'
@@ -20,6 +23,7 @@ const rpa = (populacao: number | null): RpaMapa => ({
   populacao,
   chuva_24h_mm: null,
   alerta_nivel: null,
+  prioridade: null,
 })
 
 const cor = (legenda: { rotulo: string; cor: string }[], rotulo: string) =>
@@ -86,5 +90,23 @@ describe('camadas do mapa (DEC-038)', () => {
       [-7.93, -34.87],
     ])
     expect(enquadramento([rpa(1)])).toBeNull()
+  })
+
+  it('lista as prioritárias na ordem da API e soma a população delas (RN-016)', () => {
+    const rpas: RpaMapa[] = [
+      { ...rpa(73_764), rpa: 1, prioridade: 2 },
+      { ...rpa(220_000), rpa: 2 },
+      { ...rpa(null), rpa: 3, prioridade: 3 },
+      { ...rpa(372_982), rpa: 6, prioridade: 1 },
+    ]
+
+    expect(areasPrioritarias(rpas).map((r) => r.rpa)).toEqual([6, 1, 3])
+    expect(pessoasEmRisco(rpas)).toBe(446_746)
+    expect(pessoasEmRisco([rpa(100)])).toBe(0)
+  })
+
+  it('escreve a prioridade como ordinal, e travessão sem prioridade', () => {
+    expect(rotuloDaPrioridade(1)).toBe('1ª')
+    expect(rotuloDaPrioridade(null)).toBe('—')
   })
 })

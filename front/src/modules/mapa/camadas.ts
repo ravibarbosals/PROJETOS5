@@ -70,6 +70,23 @@ export function populacaoTotal(rpas: RpaMapa[]): number | null {
   return rpas.reduce((soma, r) => soma + (r.populacao ?? 0), 0)
 }
 
+// RN-016: as RPAs prioritárias (com alerta ativo nelas), na ordem da API
+export function areasPrioritarias(rpas: RpaMapa[]): RpaMapa[] {
+  return rpas
+    .filter((r) => r.prioridade !== null)
+    .sort((a, b) => (a.prioridade ?? 0) - (b.prioridade ?? 0))
+}
+
+// RN-016 #4 (EST-03): pessoas em risco = população residente das prioritárias
+// (PR-030); RPA sem população não soma
+export function pessoasEmRisco(rpas: RpaMapa[]): number {
+  return areasPrioritarias(rpas).reduce((soma, r) => soma + (r.populacao ?? 0), 0)
+}
+
+export function rotuloDaPrioridade(prioridade: number | null): string {
+  return prioridade === null ? '—' : `${prioridade}ª`
+}
+
 // RN-007: null quando a fonte não tem coleta; nunca a hora atual
 export function atualizacaoDaFonte(fontes: FonteDoMapa[], fonte: string): string | null {
   return fontes.find((f) => f.fonte === fonte)?.ultima_atualizacao ?? null

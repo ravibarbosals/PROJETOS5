@@ -21,6 +21,7 @@ vi.mock('@/modules/alertas/service/alertas.service', () => ({
 
 vi.mock('@/modules/indicadores/service/indicadores.service', () => ({
   consultarTempoAcionamento: vi.fn(() => new Promise(() => {})),
+  consultarDecisoesPendentes: vi.fn(() => new Promise(() => {})),
 }))
 
 vi.mock('@/modules/boletins/service/boletins.service', () => ({

@@ -6,6 +6,7 @@ import {
   corDoAlerta,
   corDoRisco,
   enquadramento,
+  rotuloDaPrioridade,
   rotuloDoRisco,
 } from '@/modules/mapa/camadas'
 import type { AreaRisco, CamadaRpa, RpaMapa } from '@/modules/mapa/types'
@@ -41,9 +42,10 @@ export function MapaLeaflet({ rpas, areas, camada, mostrarAreas }: MapaLeafletPr
           <GeoJSON
             key={`${rpa.rpa}-${camada}`}
             data={rpa.limite}
+            // Área prioritária (RN-016, REQ-003 #2): contorno grosso
             style={{
               color: '#1e293b',
-              weight: 1.5,
+              weight: rpa.prioridade === null ? 1.5 : 4,
               fillOpacity: 0.45,
               fillColor:
                 camada === 'alerta' ? corDoAlerta(rpa.alerta_nivel) : corDaChuva(rpa.chuva_24h_mm),
@@ -58,6 +60,12 @@ export function MapaLeaflet({ rpas, areas, camada, mostrarAreas }: MapaLeafletPr
               {rpa.chuva_24h_mm === null ? 'sem leitura' : `${formatarNumero(rpa.chuva_24h_mm)} mm`}
               <br />
               Alerta: {rpa.alerta_nivel ?? 'nenhum ativo'}
+              {rpa.prioridade !== null && (
+                <>
+                  <br />
+                  Área prioritária: {rotuloDaPrioridade(rpa.prioridade)}
+                </>
+              )}
             </Tooltip>
           </GeoJSON>
         ) : null,

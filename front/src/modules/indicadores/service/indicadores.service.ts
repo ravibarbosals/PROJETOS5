@@ -1,6 +1,7 @@
 import { http } from '@/lib/http'
 import type { Intervalo } from '@/lib/periodo'
 import type {
+  DecisoesPendentes,
   FiltrosIndicadores,
   IndicadorTerritorio,
   TempoAcionamento,
@@ -10,6 +11,11 @@ export async function consultarTempoAcionamento(intervalo: Intervalo): Promise<T
   const { data } = await http.get<TempoAcionamento>('/indicadores/tempo-acionamento', {
     params: intervalo,
   })
+  return data
+}
+
+export async function consultarDecisoesPendentes(): Promise<DecisoesPendentes> {
+  const { data } = await http.get<DecisoesPendentes>('/indicadores/decisoes-pendentes')
   return data
 }
 

@@ -18,6 +18,21 @@ export interface TempoAcionamento {
   alertas: TempoAcionamentoAlerta[]
 }
 
+// GET /indicadores/decisoes-pendentes (PR-033): alertas ativos sem ação
+export interface AlertaPendente {
+  id: number
+  variavel: string
+  territorio: string
+  nivel: string
+  disparado_em: string
+}
+
+export interface DecisoesPendentes {
+  total: number
+  /** Do disparo mais antigo para o mais novo */
+  alertas: AlertaPendente[]
+}
+
 // GET /indicadores (MOD-005, DEC-031): casos prováveis por bairro e semana
 // epidemiológica.
 export type Agravo = 'dengue' | 'chikungunya' | 'zika'

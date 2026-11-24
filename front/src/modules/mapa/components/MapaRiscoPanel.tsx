@@ -21,6 +21,7 @@ import {
   LEGENDA_CHUVA,
   LEGENDA_RISCO,
   populacaoTotal,
+  rotuloDaPrioridade,
   type ItemLegenda,
 } from '@/modules/mapa/camadas'
 import { useMapaQuery } from '@/modules/mapa/hooks/useMapa'
@@ -44,8 +45,8 @@ const FONTES: { fonte: string; rotulo: string }[] = [
 ]
 
 // REQ-008, REQ-003, DEC-038 (TASK-064): as 6 RPAs pintadas pelo alerta ativo
-// ou pela chuva de 24 h, com os pontos de área de risco da Defesa Civil. A área
-// prioritária espera a DUV-047.
+// ou pela chuva de 24 h, com os pontos de área de risco da Defesa Civil. As
+// áreas prioritárias (RN-016) aparecem destacadas (REQ-003 #2).
 export function MapaRiscoPanel() {
   const [camada, setCamada] = useState<CamadaRpa>('alerta')
   const [mostrarAreas, setMostrarAreas] = useState(true)
@@ -129,6 +130,10 @@ function Conteudo({ mapa, camada, mostrarAreas }: ConteudoProps) {
               Alerta do Recife inteiro não pinta uma RPA, porque não diz onde aconteceu.
             </p>
           )}
+          <p className="text-xs text-muted-foreground">
+            Contorno grosso: área prioritária, uma RPA com alerta ativo. A ordem vai da maior para
+            a menor população residente.
+          </p>
           {mostrarAreas && <Legenda titulo="Pontos de área de risco" itens={LEGENDA_RISCO} />}
           <p className="text-xs text-muted-foreground">
             A Prefeitura publica só as áreas de risco da Regional Sul (RPA 6):{' '}
@@ -146,6 +151,7 @@ function Conteudo({ mapa, camada, mostrarAreas }: ConteudoProps) {
               <TableHead className="text-right">População residente</TableHead>
               <TableHead className="text-right">Chuva 24 h</TableHead>
               <TableHead>Alerta ativo</TableHead>
+              <TableHead>Prioridade</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -165,6 +171,7 @@ function Conteudo({ mapa, camada, mostrarAreas }: ConteudoProps) {
                   <Marcador cor={corDoAlerta(rpa.alerta_nivel)} />
                   {rpa.alerta_nivel ?? 'Nenhum'}
                 </TableCell>
+                <TableCell>{rotuloDaPrioridade(rpa.prioridade)}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -174,7 +181,7 @@ function Conteudo({ mapa, camada, mostrarAreas }: ConteudoProps) {
               <TableCell className="text-right tabular-nums">
                 {total === null ? '—' : formatarNumero(total)}
               </TableCell>
-              <TableCell colSpan={2} />
+              <TableCell colSpan={3} />
             </TableRow>
           </TableFooter>
         </Table>

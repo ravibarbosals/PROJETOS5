@@ -25,7 +25,7 @@ const CODIGO_POR_PAPEL: Record<Papel, string> = {
 const DESCRICAO_POR_PAPEL: Record<Papel, string> = {
   TEC: 'Painel operacional: dados meteorológicos e hidrológicos, indicadores e boletim técnico',
   GES: 'Mapa de risco, alertas automáticos por parâmetro e linha do tempo do evento',
-  GIN: 'Pessoas em risco, cobertura de resposta e tempo médio de acionamento',
+  GIN: 'Pessoas em risco, decisões pendentes e tempo médio de acionamento',
   COM: 'Montagem e pré-visualização do boletim para publicação',
   ADM: 'Contas, papéis e acesso ao sistema',
 }

@@ -18,6 +18,8 @@ export interface RpaMapa {
   chuva_24h_mm: number | null
   /** Maior nível entre os alertas ativos da própria RPA */
   alerta_nivel: NivelAlerta | null
+  /** Posição entre as áreas prioritárias (RN-016), 1 = maior população; null se não é */
+  prioridade: number | null
 }
 
 export interface AreaRisco {

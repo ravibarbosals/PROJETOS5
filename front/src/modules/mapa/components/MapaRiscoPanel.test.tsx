@@ -29,13 +29,19 @@ const rpa = (numero: number, nome: string, extra: Partial<RpaMapa> = {}): RpaMap
   populacao: 100_000,
   chuva_24h_mm: null,
   alerta_nivel: null,
+  prioridade: null,
   ...extra,
 })
 
 const mapa: Mapa = {
   rpas: [
     rpa(1, 'RPA 1 - Centro', { populacao: 73_764, chuva_24h_mm: 0.3 }),
-    rpa(6, 'RPA 6 - Sul', { populacao: 372_982, chuva_24h_mm: 12.4, alerta_nivel: 'ALTO' }),
+    rpa(6, 'RPA 6 - Sul', {
+      populacao: 372_982,
+      chuva_24h_mm: 12.4,
+      alerta_nivel: 'ALTO',
+      prioridade: 1,
+    }),
   ],
   areas_risco: [
     {
@@ -81,15 +87,15 @@ describe('MapaRiscoPanel (REQ-008, DEC-038)', () => {
     expect(screen.queryByRole('list', { name: 'Pontos de área de risco' })).toBeNull()
   })
 
-  it('resume cada RPA e soma a população do Recife (PR-030)', async () => {
+  it('resume cada RPA, com a prioridade (RN-016), e soma a população do Recife (PR-030)', async () => {
     renderWithQuery(<MapaRiscoPanel />)
 
     const tabela = await screen.findByRole('table', { name: 'Resumo por RPA' })
     const linhas = within(tabela).getAllByRole('row').map((l) => l.textContent)
     expect(linhas).toEqual([
-      'RPAPopulação residenteChuva 24 hAlerta ativo',
-      'RPA 1 - Centro73.7640,3 mmNenhum',
-      'RPA 6 - Sul372.98212,4 mmALTO',
+      'RPAPopulação residenteChuva 24 hAlerta ativoPrioridade',
+      'RPA 1 - Centro73.7640,3 mmNenhum—',
+      'RPA 6 - Sul372.98212,4 mmALTO1ª',
       'Recife446.746',
     ])
   })
