@@ -12,6 +12,7 @@ import {
   MapaResponseDto,
   RpaMapaDto,
 } from '@/modules/paineis/mapa/dto/mapa-response.dto';
+import { areasPrioritarias } from '@/modules/paineis/mapa/domain/area-prioritaria';
 
 // Fontes que o mapa mostra (DEC-038): a chuva e as três do gold do mapa
 const FONTES_DO_MAPA = [
@@ -55,7 +56,8 @@ export class MapaService {
   }
 
   // DEC-034: a chuva acumula por estação na janela e vale o maior acumulado.
-  // O alerta do Recife não pinta RPA: não diz em qual delas aconteceu.
+  // O alerta do Recife não pinta RPA: não diz em qual delas aconteceu (nem a
+  // torna prioritária, RN-016 #2).
   private async rpas(agora: Date): Promise<RpaMapaDto[]> {
     const linhas = await this.dataSource.query<LinhaRpa[]>(
       `WITH chuva AS (
@@ -90,10 +92,12 @@ export class MapaService {
         NivelAlerta.Moderado,
       ],
     );
+    const prioridades = areasPrioritarias(linhas);
     return linhas.map((linha) => ({
       ...linha,
       chuva_24h_mm:
         linha.chuva_24h_mm === null ? null : Number(linha.chuva_24h_mm),
+      prioridade: prioridades.get(linha.rpa) ?? null,
     }));
   }
 

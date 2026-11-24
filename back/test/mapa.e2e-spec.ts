@@ -25,6 +25,7 @@ interface RpaMapa {
   populacao: number | null;
   chuva_24h_mm: number | null;
   alerta_nivel: string | null;
+  prioridade: number | null;
 }
 
 // MOD-005, DEC-038, DEC-034, PR-030, PER-011 (TASK-062). As somas e o join
@@ -75,6 +76,7 @@ describe('Mapa da EST-01 (e2e)', () => {
         populacao: null,
         chuva_24h_mm: null,
         alerta_nivel: null,
+        prioridade: null,
       })),
       areas_risco: [],
       fontes: [],
@@ -167,6 +169,39 @@ describe('Mapa da EST-01 (e2e)', () => {
     expect(
       (res.body as { rpas: RpaMapa[] }).rpas.map((r) => r.alerta_nivel),
     ).toEqual([null, null, null, 'ALTO', 'MODERADO', null]);
+  });
+
+  it('priority: RPAs with an active alert, largest population first; a Recife alert marks none (RN-016)', async () => {
+    await inserirPopulacao(app, 'SANTO AMARO', 27_103);
+    await inserirPopulacao(app, 'IBURA', 50_000);
+    await inserirPopulacao(app, 'JORDAO', 20_000);
+    await inserirPopulacao(app, 'BOA VIAGEM', 120_000);
+    const disparadoEm = horasAtras(1);
+    for (const territorio of ['RPA 1 - Centro', 'RPA 6 - Sul']) {
+      await criarAlerta(app, { disparadoEm, territorio });
+    }
+    await criarAlerta(app, {
+      disparadoEm,
+      territorio: 'RPA 3 - Noroeste',
+      nivel: NivelAlerta.Moderado,
+    });
+    await criarAlerta(app, { disparadoEm, territorio: 'Recife' });
+
+    const res = await get().expect(200);
+
+    expect(
+      (res.body as { rpas: RpaMapa[] }).rpas.map((r) => [
+        r.populacao,
+        r.prioridade,
+      ]),
+    ).toEqual([
+      [27_103, 2],
+      [null, null],
+      [null, 3],
+      [null, null],
+      [null, null],
+      [190_000, 1],
+    ]);
   });
 
   it('lists the risk points and the dates of the map sources (RN-007)', async () => {

@@ -19,6 +19,8 @@ export class RpaMapaDto {
   chuva_24h_mm!: number | null;
   /** Maior nível entre os alertas ativos da própria RPA (DEC-029) */
   alerta_nivel!: NivelAlerta | null;
+  /** Posição entre as áreas prioritárias (RN-016); nula se não é prioritária */
+  prioridade!: number | null;
 }
 
 export class AreaRiscoDto {
