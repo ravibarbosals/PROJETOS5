@@ -12,9 +12,9 @@ export interface Leitura {
   lidaEm: Date;
 }
 
-// Campo do Open-Meteo -> nome da variável usado no gold
+// Campo do Open-Meteo -> nome da variável usado no gold. A chuva vem dos
+// pluviômetros do Cemaden (DEC-045); a de coletas antigas é ignorada.
 const VARIAVEIS: Record<string, Variavel> = {
-  precipitation: 'precipitacao_mm',
   temperature_2m: 'temperatura_c',
   relative_humidity_2m: 'umidade_pct',
   surface_pressure: 'pressao_hpa',

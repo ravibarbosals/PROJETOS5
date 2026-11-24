@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { simplificar, utm25sParaGraus, type Ponto } from './geo.js';
+import {
+  dentroDoMultiPoligono,
+  simplificar,
+  utm25sParaGraus,
+  type Ponto,
+} from './geo.js';
 
 describe('utm25sParaGraus', () => {
   it('converts a point in Recife from UTM 25S to longitude/latitude', () => {
@@ -42,5 +47,24 @@ describe('simplificar', () => {
 
     assert.deepEqual(simples[0], simples[simples.length - 1]);
     assert.equal(simples.length, 5);
+  });
+});
+
+describe('dentroDoMultiPoligono', () => {
+  const quadrado: Ponto[] = [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]];
+  const buraco: Ponto[] = [[4, 4], [6, 4], [6, 6], [4, 6], [4, 4]];
+  const outro: Ponto[] = [[20, 0], [30, 0], [30, 10], [20, 10], [20, 0]];
+
+  it('finds a point inside any of the polygons', () => {
+    assert.equal(dentroDoMultiPoligono([2, 2], [[quadrado], [outro]]), true);
+    assert.equal(dentroDoMultiPoligono([25, 5], [[quadrado], [outro]]), true);
+  });
+
+  it('leaves out a point outside every polygon', () => {
+    assert.equal(dentroDoMultiPoligono([15, 5], [[quadrado], [outro]]), false);
+  });
+
+  it('leaves out a point inside a hole', () => {
+    assert.equal(dentroDoMultiPoligono([5, 5], [[quadrado, buraco]]), false);
   });
 });

@@ -77,3 +77,25 @@ export function simplificar(linha: Ponto[], tolerancia: number): Ponto[] {
   const antes = simplificar(linha.slice(0, indice + 1), tolerancia);
   return [...antes.slice(0, -1), ...simplificar(linha.slice(indice), tolerancia)];
 }
+
+// Ray casting: o ponto está dentro do anel? Anel em [longitude, latitude].
+function dentroDoAnel([x, y]: Ponto, anel: Ponto[]): boolean {
+  let dentro = false;
+  for (let i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+    const [xi, yi] = anel[i];
+    const [xj, yj] = anel[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) {
+      dentro = !dentro;
+    }
+  }
+  return dentro;
+}
+
+// MultiPolygon do GeoJSON: dentro do contorno de algum polígono e fora dos
+// buracos dele.
+export function dentroDoMultiPoligono(ponto: Ponto, poligonos: Ponto[][][]): boolean {
+  return poligonos.some(
+    ([contorno, ...buracos]) =>
+      dentroDoAnel(ponto, contorno) && !buracos.some((b) => dentroDoAnel(ponto, b)),
+  );
+}

@@ -6,6 +6,11 @@ import {
   VERSAO_CONTAGEM,
 } from './coletores/arboviroses.js';
 import {
+  coletarCemaden,
+  credenciaisCemaden,
+  FONTE_CEMADEN,
+} from './coletores/cemaden.js';
+import {
   coletarAreasDeRisco,
   coletarLimitesRpa,
   coletarPopulacao,
@@ -25,11 +30,15 @@ import {
 } from './coletores/openmeteo-historico.js';
 import { montarIndicadores } from './tratamentos/arboviroses.js';
 import {
+  extrairLeiturasCemaden,
+  type LimiteDaRpa,
+} from './tratamentos/cemaden.js';
+import {
   montarAreasDeRisco,
   montarLimites,
   montarPopulacao,
 } from './tratamentos/mapa.js';
-import { extrairLeituras } from './tratamentos/openmeteo.js';
+import { extrairLeituras, type Leitura } from './tratamentos/openmeteo.js';
 import { extrairDias } from './tratamentos/openmeteo-historico.js';
 
 const UPSERT = `
@@ -174,17 +183,34 @@ async function coletarHistorico(pool: pg.Pool): Promise<boolean> {
   return gravarColeta(pool, await coletarClimaHistorico(janela));
 }
 
+// DEC-045: pluviômetros do Cemaden. Sem credencial no .env, fica desligado.
+async function coletarChuvaMedida(pool: pg.Pool): Promise<boolean> {
+  const credenciais = credenciaisCemaden();
+  if (!credenciais) {
+    console.log(`${FONTE_CEMADEN}: desligado (sem CEMADEN_EMAIL e CEMADEN_SENHA)`);
+    return true;
+  }
+  return gravarColeta(pool, await coletarCemaden(credenciais));
+}
+
 // Chama as APIs e grava as respostas no bronze. Devolve false se alguma fonte
 // falhou.
 export async function coletar(pool: pg.Pool): Promise<boolean> {
   const openMeteo = await gravarColeta(pool, await coletarOpenMeteo());
+  const cemaden = await coletarChuvaMedida(pool);
   const arboviroses = await coletarArboviroses(pool);
   const mapa = await coletarMapa(pool);
   const historico = await coletarHistorico(pool);
-  return openMeteo && arboviroses && mapa && historico;
+  return openMeteo && cemaden && arboviroses && mapa && historico;
 }
 
-async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
+// Leituras de uma fonte: cada coleta pendente vira upsert no gold, numa
+// transação por coleta.
+async function tratarLeituras(
+  pool: pg.Pool,
+  fonte: string,
+  extrair: (payload: unknown, coletadoEm: Date) => Leitura[],
+): Promise<boolean> {
   const { rows: coletas } = await pool.query<{
     id: string;
     payload: unknown;
@@ -192,8 +218,9 @@ async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
   }>(
     `SELECT id, payload, coletado_em
      FROM bronze.coleta
-     WHERE fonte = 'openmeteo' AND status_http = 200 AND processado_em IS NULL
+     WHERE fonte = $1 AND status_http = 200 AND processado_em IS NULL
      ORDER BY coletado_em`,
+    [fonte],
   );
 
   let ok = true;
@@ -201,7 +228,7 @@ async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
     const cliente = await pool.connect();
     try {
       await cliente.query('BEGIN');
-      const leituras = extrairLeituras(coleta.payload, coleta.coletado_em);
+      const leituras = extrair(coleta.payload, coleta.coletado_em);
       for (const l of leituras) {
         await cliente.query(UPSERT, [
           l.fonte,
@@ -226,8 +253,47 @@ async function tratarOpenMeteo(pool: pg.Pool): Promise<boolean> {
       cliente.release();
     }
   }
-  console.log(`${coletas.length} coletas pendentes do openmeteo lidas`);
+  console.log(`${coletas.length} coletas pendentes do ${fonte} lidas`);
   return ok;
+}
+
+// DEC-045: a chuva do modelo sai do gold; a das coletas antigas fica no bronze.
+async function apagarChuvaDoModelo(pool: pg.Pool): Promise<boolean> {
+  try {
+    const { rowCount } = await pool.query(
+      `DELETE FROM gold.leitura_climatica
+       WHERE fonte = 'openmeteo' AND variavel = 'precipitacao_mm'`,
+    );
+    if (rowCount) console.log(`openmeteo: ${rowCount} leituras de chuva apagadas`);
+    return true;
+  } catch (erro) {
+    console.error(`openmeteo: ${String(erro)}`);
+    return false;
+  }
+}
+
+// Depois dos limites (tratar), para a estação cair na RPA certa
+async function tratarCemaden(pool: pg.Pool): Promise<boolean> {
+  let limites: LimiteDaRpa[];
+  try {
+    const { rows } = await pool.query<{
+      nome: string;
+      limite: { coordinates: LimiteDaRpa['coordenadas'] };
+    }>(
+      `SELECT nome, limite FROM gold.territorio
+       WHERE tipo = 'RPA' AND limite IS NOT NULL ORDER BY rpa`,
+    );
+    limites = rows.map((r) => ({
+      territorio: r.nome,
+      coordenadas: r.limite.coordinates,
+    }));
+  } catch (erro) {
+    console.error(`${FONTE_CEMADEN}: ${String(erro)}`);
+    return false;
+  }
+  return tratarLeituras(pool, FONTE_CEMADEN, (payload) =>
+    extrairLeiturasCemaden(payload, limites),
+  );
 }
 
 // DEC-035: cada bairro ganha a RPA de gold.bairro_rpa; bairro fora da lista
@@ -501,7 +567,8 @@ async function tratarClimaHistorico(pool: pg.Pool): Promise<boolean> {
 // Move as coletas pendentes do bronze para o gold. Devolve false se alguma
 // falhou.
 export async function tratar(pool: pg.Pool): Promise<boolean> {
-  const openMeteo = await tratarOpenMeteo(pool);
+  const openMeteo = await tratarLeituras(pool, 'openmeteo', extrairLeituras);
+  const chuvaDoModelo = await apagarChuvaDoModelo(pool);
   const arboviroses = await tratarArboviroses(pool);
   const areas = await refazerSeHouverNova(
     pool,
@@ -518,8 +585,16 @@ export async function tratar(pool: pg.Pool): Promise<boolean> {
     FONTE_LIMITES_RPA,
     gravarLimites,
   );
+  const cemaden = await tratarCemaden(pool);
   const historico = await tratarClimaHistorico(pool);
   return (
-    openMeteo && arboviroses && areas && populacao && limites && historico
+    openMeteo &&
+    chuvaDoModelo &&
+    arboviroses &&
+    areas &&
+    populacao &&
+    limites &&
+    cemaden &&
+    historico
   );
 }

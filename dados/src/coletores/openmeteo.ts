@@ -35,8 +35,8 @@ const URL_OPENMETEO =
   new URLSearchParams({
     latitude: PONTOS.map((p) => p.latitude).join(','),
     longitude: PONTOS.map((p) => p.longitude).join(','),
-    hourly:
-      'temperature_2m,relative_humidity_2m,precipitation,surface_pressure',
+    // Sem precipitation: a chuva vem do Cemaden (DEC-045)
+    hourly: 'temperature_2m,relative_humidity_2m,surface_pressure',
     past_days: '7',
     forecast_days: '1',
     timezone: 'GMT',

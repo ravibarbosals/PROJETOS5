@@ -18,13 +18,19 @@ describe('extrairLeituras', () => {
   it('turns each hour and variable into one reading in UTC', () => {
     const leituras = extrairLeituras(payload, coletadoEm);
 
-    const chuva = leituras.find(
+    const umidade = leituras.find(
       (l) =>
-        l.variavel === 'precipitacao_mm' &&
+        l.variavel === 'umidade_pct' &&
         l.lidaEm.toISOString() === '2026-11-17T10:00:00.000Z',
     );
-    assert.equal(chuva?.valor, 2.4);
-    assert.equal(chuva?.fonte, 'openmeteo');
+    assert.equal(umidade?.valor, 75);
+    assert.equal(umidade?.fonte, 'openmeteo');
+  });
+
+  it('ignores precipitation from old collections (DEC-045)', () => {
+    const leituras = extrairLeituras(payload, coletadoEm);
+
+    assert.ok(leituras.every((l) => l.variavel !== 'precipitacao_mm'));
   });
 
   it('drops hours after the collection (forecast)', () => {
@@ -36,8 +42,8 @@ describe('extrairLeituras', () => {
   it('drops null values', () => {
     const leituras = extrairLeituras(payload, coletadoEm);
 
-    // 2 horas passadas x 4 variáveis, menos a temperatura nula
-    assert.equal(leituras.length, 7);
+    // 2 horas passadas x 3 variáveis, menos a temperatura nula
+    assert.equal(leituras.length, 5);
   });
 
   it('reads an old single-point payload as Recife', () => {
@@ -53,9 +59,9 @@ describe('extrairLeituras', () => {
 
     const leituras = extrairLeituras(lista, coletadoEm);
 
-    assert.equal(leituras.length, 7 * PONTOS.length);
+    assert.equal(leituras.length, 5 * PONTOS.length);
     const sul = leituras.filter((l) => l.estacao === 'rpa6');
-    assert.equal(sul.length, 7);
+    assert.equal(sul.length, 5);
     assert.ok(sul.every((l) => l.territorio === 'RPA 6 - Sul'));
   });
 
