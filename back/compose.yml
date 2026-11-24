@@ -116,6 +116,12 @@ services:
   dados:
     build: ../dados
     image: ravialmeida10/vigia-dados:latest
+    # CEMADEN_EMAIL and CEMADEN_SENHA (DEC-045) come from dados/.env when it
+    # exists; without them the rain gauge collector stays off. The values in
+    # environment below win over the file (its DATABASE_URL is ignored here).
+    env_file:
+      - path: ../dados/.env
+        required: false
     environment:
       DATABASE_URL: *database-url
       INTERVALO_MINUTOS: ${INTERVALO_MINUTOS:-60}

@@ -25,7 +25,7 @@ Não precisa de `.env`: o compose tem padrões locais para tudo. As imagens vêm
 | `db-init` | `vigia-db` | Roda o mesmo `schema.sql` a cada subida, para um volume antigo receber as tabelas novas (idempotente; roda e termina) |
 | `migrate` | `vigia-api` | Aplica as migrations pendentes e cria o primeiro administrador (roda e termina; se já existe um, nada muda) |
 | `api` | `vigia-api` | API em http://localhost:3000 (`/health` mostra o banco) |
-| `dados` | `vigia-dados` | Agendador da pipeline (DEC-026): coleta e trata ao subir e a cada `INTERVALO_MINUTOS` (padrão 60). Logs: `docker compose logs -f dados` |
+| `dados` | `vigia-dados` | Agendador da pipeline (DEC-026): coleta e trata ao subir e a cada `INTERVALO_MINUTOS` (padrão 60). A chuva medida do Cemaden só é coletada com `CEMADEN_EMAIL` e `CEMADEN_SENHA` no `../dados/.env` (DEC-045). Logs: `docker compose logs -f dados` |
 | `front` | `vigia-front` | Interface em **http://localhost:8080**. O nginx repassa `/api` para a API |
 | `mailpit` | `axllent/mailpit` (pública) | Caixa de entrada local em **http://localhost:8025**: recebe os e-mails de alerta (DEC-037) sem mandar nada para fora |
 
