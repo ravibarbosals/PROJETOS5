@@ -6,13 +6,12 @@ import { TipoAcaoManual } from '@/modules/alertas/enums/tipo-acao-manual.enum';
 
 // TASK-050. Dados fictícios de demonstração, com datas relativas a "agora".
 // Valores ilustrativos: os parâmetros reais são do Vigidesastres (DUV-018).
-// Variáveis, fonte e território são os do gold real (Open-Meteo, Recife), para
-// o job de alertas (DEC-029) tratar os dados de demonstração como os reais.
+// Variáveis, fontes e território são os do gold real (chuva do Cemaden, o resto
+// do Open-Meteo; Recife), para o job de alertas (DEC-029) tratar os dados de
+// demonstração como os reais.
 
 export const DOMINIO_DEMO = 'demo.vigia.local';
 
-const FONTE = 'openmeteo';
-const ESTACAO = 'recife';
 const TERRITORIO = 'Recife';
 const MINUTO_MS = 60_000;
 const HORA_MS = 60 * MINUTO_MS;
@@ -450,4 +449,13 @@ export function alertaAtivoDemo(agora: Date): AlertaDemo {
   };
 }
 
-export const FONTE_DEMO = { fonte: FONTE, estacao: ESTACAO };
+// A chuva vem dos pluviômetros do Cemaden (DEC-045; estação Pina, na RPA 6);
+// as outras variáveis, do Open-Meteo.
+export function fonteDemo(variavel: string): {
+  fonte: string;
+  estacao: string;
+} {
+  return variavel === 'precipitacao_mm'
+    ? { fonte: 'cemaden', estacao: '261160617A' }
+    : { fonte: 'openmeteo', estacao: 'rpa6' };
+}

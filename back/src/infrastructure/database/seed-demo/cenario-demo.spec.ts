@@ -3,6 +3,7 @@ import {
   PRORROGACAO_DEMO_HORAS,
   alertaAtivoDemo,
   cenarioDemo,
+  fonteDemo,
 } from '@/infrastructure/database/seed-demo/cenario-demo';
 import { Papel } from '@/modules/acesso/enums/papel.enum';
 import {
@@ -131,5 +132,15 @@ describe('alertaAtivoDemo (--ativo)', () => {
 
   it('says in the extension reason that it is a demonstration', () => {
     expect(ativo.acoesManuais[0].motivo).toMatch(/^Demonstração/);
+  });
+});
+
+describe('fonteDemo', () => {
+  it('takes the rain from the Cemaden rain gauges and the rest from Open-Meteo (DEC-045)', () => {
+    expect(fonteDemo('precipitacao_mm')).toEqual({
+      fonte: 'cemaden',
+      estacao: '261160617A',
+    });
+    expect(fonteDemo('temperatura_c').fonte).toBe('openmeteo');
   });
 });

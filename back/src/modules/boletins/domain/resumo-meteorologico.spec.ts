@@ -77,6 +77,21 @@ describe('resumirMeteorologia (TASK-032, PR-013)', () => {
     });
   });
 
+  it('adds the 10-minute rain gauge readings of the last hour (DEC-045)', () => {
+    const P = VariavelClimatica.Precipitacao;
+    const resumo = resumirMeteorologia([
+      leitura(P, 4, '2026-11-20T10:50:00Z', ATUALIZADA, 'A'),
+      leitura(P, 1.2, '2026-11-20T11:10:00Z', ATUALIZADA, 'A'),
+      leitura(P, 0.8, '2026-11-20T11:20:00Z', ATUALIZADA, 'A'),
+      leitura(P, 1.4, '2026-11-20T11:50:00Z', ATUALIZADA, 'B'),
+    ]);
+
+    expect(resumo?.chuvaUltimaHora).toEqual({
+      valor: 2,
+      lidaEm: new Date('2026-11-20T11:50:00Z'),
+    });
+  });
+
   it('is null without any reading', () => {
     expect(resumirMeteorologia([])).toBeNull();
   });

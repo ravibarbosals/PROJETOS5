@@ -14,7 +14,7 @@ import {
   type AlertaDemo,
   type ChaveParametro,
   DOMINIO_DEMO,
-  FONTE_DEMO,
+  fonteDemo,
   alertaAtivoDemo,
   cenarioDemo,
 } from '@/infrastructure/database/seed-demo/cenario-demo';
@@ -192,7 +192,7 @@ async function inserirAlerta(
     territorio: parametro.territorio,
     limiar: parametro.limiar,
     nivel: parametro.nivel,
-    ...FONTE_DEMO,
+    ...fonteDemo(parametro.variavel),
     valorLido: a.valorLido,
     lidaEm: a.lidaEm,
     valorMaximo: a.valorMaximo,

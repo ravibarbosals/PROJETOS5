@@ -14,9 +14,10 @@ import {
 } from '@/modules/paineis/mapa/dto/mapa-response.dto';
 import { areasPrioritarias } from '@/modules/paineis/mapa/domain/area-prioritaria';
 
-// Fontes que o mapa mostra (DEC-038): a chuva e as três do gold do mapa
+// Fontes que o mapa mostra (DEC-038): a chuva (Cemaden, DEC-045) e as três do
+// gold do mapa
 const FONTES_DO_MAPA = [
-  'openmeteo',
+  'cemaden',
   'recife_areas_risco',
   'recife_limites_rpa',
   'ibge_populacao',

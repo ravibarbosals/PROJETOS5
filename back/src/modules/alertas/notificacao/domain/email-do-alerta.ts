@@ -1,4 +1,8 @@
 import { NivelAlerta } from '@/modules/alertas/enums/nivel-alerta.enum';
+import {
+  atribuicoesDasFontes,
+  nomeDaFonte,
+} from '@/modules/paineis/fonte-status/domain/nome-da-fonte';
 
 // DEC-037: o e-mail sai no disparo e no escalonamento (MODERADO → ALTO).
 export enum EventoAlerta {
@@ -66,7 +70,8 @@ export function montarEmailDoAlerta(
     ...(escalonadoEm
       ? [`Valor máximo até agora: ${valor(alerta.valorMaximo)}`]
       : []),
-    `Fonte: ${alerta.fonte} (estação ${alerta.estacao})`,
+    `Fonte: ${nomeDaFonte(alerta.fonte)}, estação ${alerta.estacao}`,
+    ...atribuicoesDasFontes([alerta.fonte]),
     '',
     'Acompanhe o alerta e registre a resposta na EST-02 do O Vigia.',
     '',

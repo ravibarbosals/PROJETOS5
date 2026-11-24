@@ -38,8 +38,22 @@ describe('montarEmailDoAlerta', () => {
     expect(texto).toContain(
       'Valor que disparou: 36,3 mm, lido em 21/11/2026, 09:00',
     );
-    expect(texto).toContain('Fonte: openmeteo (estação rpa6)');
+    expect(texto).toContain(
+      'Fonte: Open-Meteo (modelo meteorológico), estação rpa6',
+    );
+    expect(texto).not.toContain('CEMADEN');
     expect(texto).not.toContain('Valor máximo');
+  });
+
+  it('names the Cemaden rain gauge and cites the network (DEC-036)', () => {
+    const { texto } = montarEmailDoAlerta(
+      { ...alerta, fonte: 'cemaden', estacao: '261160617A' },
+      EventoAlerta.Disparo,
+    );
+
+    expect(texto).toContain(
+      'Fonte: Cemaden (pluviômetros), estação 261160617A\nDADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC',
+    );
   });
 
   it('describes an escalation with the new level and the peak value', () => {

@@ -59,6 +59,18 @@ function maiorAcumulado(chuva: LeituraResponseDto[]): number | null {
   return Math.max(...[...porEstacao.values()].map(somar));
 }
 
+const HORA_MS = 60 * 60 * 1000;
+
+// Chuva da última hora: a hora que termina na leitura de chuva mais recente,
+// somada em cada estação (o Cemaden lê a cada 10 min quando chove, DEC-045);
+// vale a estação de maior soma (DEC-034).
+function chuvaDaUltimaHora(chuva: LeituraResponseDto[]): LeituraPontual | null {
+  if (chuva.length === 0) return null;
+  const fim = Math.max(...chuva.map((l) => l.lida_em.getTime()));
+  const daHora = chuva.filter((l) => l.lida_em.getTime() > fim - HORA_MS);
+  return { valor: maiorAcumulado(daHora) ?? 0, lidaEm: new Date(fim) };
+}
+
 // Nulo quando não há nenhuma leitura no período: a seção diz isso.
 export function resumirMeteorologia(
   leituras: LeituraResponseDto[],
@@ -70,7 +82,7 @@ export function resumirMeteorologia(
     .filter((d): d is Date => d !== null);
   return {
     chuvaAcumulada: maiorAcumulado(chuva),
-    chuvaUltimaHora: escolher(chuva, maisRecente),
+    chuvaUltimaHora: chuvaDaUltimaHora(chuva),
     temperaturaMaxima: escolher(
       daVariavel(leituras, VariavelClimatica.Temperatura),
       maiorValor,

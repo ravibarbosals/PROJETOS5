@@ -3,6 +3,10 @@ import type {
   ResumoMeteorologico,
 } from '@/modules/boletins/domain/resumo-meteorologico';
 import {
+  atribuicoesDasFontes,
+  nomeDaFonte,
+} from '@/modules/paineis/fonte-status/domain/nome-da-fonte';
+import {
   ORDEM_SECOES,
   SecaoBoletim,
 } from '@/modules/boletins/enums/secao-boletim.enum';
@@ -65,11 +69,6 @@ const SEM_ABRIGOS =
 const SEM_LEITURAS =
   'Sem leituras meteorológicas do Recife nas últimas 24 horas.';
 
-// Nome da fonte para quem lê o boletim; o Open-Meteo é modelo, não estação.
-const NOME_FONTE: Record<string, string> = {
-  openmeteo: 'Open-Meteo (modelo meteorológico)',
-};
-
 const numero = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 
 const dataHora = new Intl.DateTimeFormat('pt-BR', {
@@ -102,7 +101,7 @@ function blocosDaMeteorologia(
     resumo.chuvaAcumulada === null
       ? 'sem leitura'
       : `${numero.format(resumo.chuvaAcumulada)} mm`;
-  const fontes = resumo.fontes.map((f) => NOME_FONTE[f] ?? f).join(', ');
+  const fontes = resumo.fontes.map(nomeDaFonte).join(', ');
   const atualizada = resumo.atualizadaEm
     ? `atualizada em ${formatarDataHora(resumo.atualizadaEm)}`
     : 'sem coleta registrada';
@@ -117,6 +116,10 @@ function blocosDaMeteorologia(
       ],
     },
     { tipo: 'paragrafo', texto: `Fonte: ${fontes} · ${atualizada}` },
+    ...atribuicoesDasFontes(resumo.fontes).map((texto): BlocoBoletim => ({
+      tipo: 'paragrafo',
+      texto,
+    })),
   ];
 }
 

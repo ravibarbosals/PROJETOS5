@@ -151,6 +151,22 @@ describe('montarDocumentoBoletim (RN-009, PR-022)', () => {
       ]);
     });
 
+    it('cites the Cemaden network when its rain gauges are a source (DEC-036)', () => {
+      expect(
+        meteorologia({ ...RESUMO, fontes: ['cemaden', 'openmeteo'] }).slice(1),
+      ).toEqual([
+        {
+          tipo: 'paragrafo',
+          texto:
+            'Fonte: Cemaden (pluviômetros), Open-Meteo (modelo meteorológico) · atualizada em 02/11/2026, 08:41',
+        },
+        {
+          tipo: 'paragrafo',
+          texto: 'DADOS DA REDE OBSERVACIONAL DO CEMADEN/MCTIC',
+        },
+      ]);
+    });
+
     it('says when the source has no collection on record (RN-007 #2)', () => {
       expect(
         meteorologia({ ...RESUMO, fontes: ['apac'], atualizadaEm: null })[1],
